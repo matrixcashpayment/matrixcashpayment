@@ -5,6 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cash Payment Production</title>
     <style>
+        /* --- SPLASH SCREEN STYLING --- */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100000;
+            color: white;
+            flex-direction: column;
+            transition: opacity 0.8s ease-out, visibility 0.8s;
+        }
+        .splash-content {
+            text-align: center;
+        }
+        .splash-title {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            animation: fadeInDown 1s ease-out;
+        }
+        .splash-dev {
+            font-size: 16px;
+            color: #C1EB7B;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 20px;
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* --- END OF SPLASH SCREEN STYLING --- */
+
         /* Classic Windows Desktop App Styling */
         * { box-sizing: border-box; user-select: none; }
         body {
@@ -112,7 +151,7 @@
         .text-red { color: red; font-weight: bold; }
 
         /* Login Screen */
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #008080; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #008080; z-index: 9999; display: none; justify-content: center; align-items: center; }
         .login-box { background: #C0C0C0; border: 2px solid #FFF; border-right-color: #000; border-bottom-color: #000; width: 320px; display: flex; flex-direction: column; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
         .login-box .window-title-bar { background: #000080; color: white; padding: 4px 6px; font-weight: bold; font-size: 12px; }
         .login-content { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
@@ -157,7 +196,15 @@
         .calendar-actions button:hover { border-color: #0078D7; background: #E5F1FB; }
     </style>
 </head>
-<body onclick="closeAllMenus(); closeRateQtyPopup(); closeCalendar(false);" onload="initApp()">
+<body onclick="closeAllMenus(); closeRateQtyPopup(); closeCalendar(false);" onload="showSplashScreen()">
+
+    <!-- SPLASH SCREEN HTML -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <div class="splash-title">MATRIX SWEATERS LIMITED</div>
+            <div class="splash-dev" id="typing-text"></div>
+        </div>
+    </div>
 
     <!-- Access Denied Modal -->
     <div class="modal-overlay" id="accessDeniedModal" style="z-index: 9999;" onclick="closeAccessDenied()">
@@ -464,6 +511,37 @@
     </div>
 
     <script>
+        /* --- SPLASH SCREEN SCRIPT --- */
+        function showSplashScreen() {
+            const devText = "Software developed by ARIFUL ISLAM";
+            const typingElement = document.getElementById('typing-text');
+            let i = 0;
+
+            function typeWriter() {
+                if (i < devText.length) {
+                    typingElement.innerHTML += devText.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 100); // Typing speed
+                } else {
+                    // Animation finished, wait 1 second then hide splash
+                    setTimeout(() => {
+                        const splash = document.getElementById('splash-screen');
+                        splash.style.opacity = '0';
+                        splash.style.visibility = 'hidden';
+                        // Show login after splash fades out
+                        setTimeout(() => {
+                            document.getElementById('loginOverlay').style.display = 'flex';
+                            initApp();
+                        }, 800);
+                    }, 1000);
+                }
+            }
+
+            // Start typing after a short delay
+            setTimeout(typeWriter, 1000);
+        }
+        /* --- END OF SPLASH SCREEN SCRIPT --- */
+
         let usersModel =[
             { username: 'admin', password: '123', section: 'All', floor: '4th', role: 'Admin' },
             { username: 'user', password: '1', section: 'Linking', floor: '4th', role: 'User' },
