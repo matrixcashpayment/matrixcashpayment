@@ -481,7 +481,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Global variables (Bound to window for compatibility with existing logic) ---
+        // --- Global variables ---
         window.usersModel = [];
         window.styles = [];
         window.rowsModel = [];
@@ -493,10 +493,7 @@
         window.currentEditingStyleIndex = -1;
 
         // --- Database Sync Functions ---
-
-        // Load initial data
         window.initApp = async function() {
-            // 1. Users
             const userSnap = await getDocs(collection(db, "users"));
             window.usersModel = userSnap.docs.map(d => d.data());
             if(window.usersModel.length === 0) {
@@ -506,15 +503,12 @@
             }
             renderUsersTable();
 
-            // 2. Styles
             const styleSnap = await getDocs(collection(db, "styles"));
             window.styles = styleSnap.docs.map(d => d.data());
 
-            // 3. Workers
             const workerSnap = await getDocs(collection(db, "workers"));
             window.workers = workerSnap.docs.map(d => d.data());
 
-            // 4. Default report dates
             let today = new Date();
             let dmyToday = ("0" + today.getDate()).slice(-2) + "/" + ("0" + (today.getMonth() + 1)).slice(-2) + "/" + today.getFullYear();
             document.getElementById('repStartDate').value = dmyToday;
@@ -527,7 +521,6 @@
             } catch(e) {}
         };
 
-        // Authenticate
         window.performLogin = async function() {
             let uInput = document.getElementById('loginUsername').value.trim();
             let pInput = document.getElementById('loginPassword').value.trim();
@@ -553,7 +546,6 @@
             } else { err.style.display = 'block'; }
         };
 
-        // Data Row update (IMPROVED FOR DATES)
         window.updateModel = async function(idNo, field, value) {
             if (idNo === 0) return;
             const rowRef = doc(db, "production", `${window.currentProductionBook}_${window.activeStyleName}_${idNo}`);
@@ -575,7 +567,6 @@
             }
         };
 
-        // Admin: Save Style
         window.saveAdminData = async function() {
             let buyer = document.getElementById('modBuyer').value.trim();
             let styleName = document.getElementById('modStyle').value.trim();
@@ -624,7 +615,6 @@
             closeAdminModal(null);
         };
 
-        // Delete style
         window.deleteStyle = async function(index, event) {
             event.stopPropagation();
             const s = window.styles[index];
@@ -635,7 +625,6 @@
             renderSavedAdminStylesList();
         };
 
-        // Password: Add User
         window.addPasswordUser = async function() {
             const name = document.getElementById('u_name').value.trim();
             const pass = document.getElementById('u_pass').value.trim();
@@ -653,14 +642,6 @@
             document.getElementById('u_name').value = ''; document.getElementById('u_pass').value = '';
         };
 
-        // Password: Edit User
-        window.updateUserPass = async function(index, newPass) {
-            const u = window.usersModel[index];
-            u.password = newPass;
-            await setDoc(doc(db, "users", u.username.toLowerCase()), u, { merge: true });
-        };
-
-        // Password: Delete User
         window.deleteUser = async function(index) {
             const u = window.usersModel[index];
             if(u.username === window.currentUser.username) { alert("Cannot delete self."); return; }
@@ -670,7 +651,6 @@
             renderUsersTable();
         };
 
-        // --- Data Fetching Logic ---
         window.fetchRowsForStyle = async function() {
             const q = query(collection(db, "production"), 
                       where("bookName", "==", window.currentProductionBook),
@@ -724,7 +704,7 @@
         };
     </script>
 
-    <!-- ORIGINAL UI LOGIC -->
+    <!-- UI Logic -->
     <script>
         function applyPermissions() {
             let adminBtn = document.getElementById('menuAdminBtn'); let passBtn = document.getElementById('menuPasswordBtn'); 
@@ -771,10 +751,7 @@
             let toShow = filteredByStyleAndBook.slice(startIndex, startIndex + 50);
 
             toShow.forEach(row => {
-                let isLocked = !!row.receiveQty && (!window.currentUser || window.currentUser.role !== 'Admin');
-                let tr = document.createElement("tr"); tr.id = 'row-' + row.idNo; 
-                if(isLocked) tr.classList.add('locked-row');
-                
+                let tr = document.createElement("tr"); tr.id = 'row-' + row.idNo; if(!!row.receiveQty) tr.classList.add('locked-row');
                 let clrOpts = `<option value=""></option>` + activeStyleObj.colors.map(c => `<option value="${c}" ${row.color === c ? 'selected' : ''}>${c}</option>`).join('');
                 tr.innerHTML = `
                     <td style="padding:0;"><input type="text" class="grid-input issue-date-input" value="${row.issueDate || ''}" onchange="window.updateModel(${row.idNo}, 'issueDate', this.value)" onkeydown="handleDateKey(event, this, 'name-input', ${row.idNo}, 'issueDate')"></td>
@@ -782,7 +759,7 @@
                     <td style="padding:0;"><input type="text" class="grid-input mobile-input" value="${row.mobileNo || ''}" onchange="window.updateModel(${row.idNo}, 'mobileNo', this.value)" onkeydown="handleGenericEnter(event, this, 'block-input')"></td>
                     <td style="padding:0;"><input type="text" class="grid-input block-input" value="${row.blockNo || ''}" onchange="window.updateModel(${row.idNo}, 'blockNo', this.value)" onkeydown="handleGenericEnter(event, this, 'color-input')"></td>
                     <td style="background:#F9F9F9; font-weight:bold; color:#555; font-size:11px;">${row.idNo}</td>
-                    <td style="padding:0;"><select class="grid-input color-input" onchange="window.updateModel(${row.idNo}, 'color', this.value)" onkeydown="handleColorKey(event, this, 'issue-qty-input', ${row.idNo})">${clrOpts}</select></td>
+                    <td style="padding:0;"><select class="grid-input color-input" onchange="window.updateModel(${row.idNo}, 'color', this.value)" onkeydown="handleGenericEnter(event, this, 'issue-qty-input')">${clrOpts}</select></td>
                     <td style="padding:0;"><input type="text" class="grid-input issue-qty-input" value="${row.issueQty}" onchange="window.updateModel(${row.idNo}, 'issueQty', this.value)" onkeydown="handleGenericEnterToRate(event, ${row.idNo}, this)"></td>
                     <td style="padding:0;" class="clickable-cell" onclick="openRateQtyPopup(${row.idNo}, this.querySelector('input'), event)"><input type="text" class="grid-input rate-input" readonly value="${row.rate}"></td>
                     <td style="padding:0;" class="clickable-cell" onclick="openRateQtyPopup(${row.idNo}, this.querySelector('input'), event)"><input type="text" class="grid-input receive-qty-input" readonly value="${row.receiveQty}"></td>
@@ -827,25 +804,10 @@
         function deleteRateQty() { window.updateModel(activePopupRowId, 'receiveQty', ''); closeRateQtyPopup(); renderTable(); }
         function closeRateQtyPopup() { document.getElementById('rateQtyPopup').style.display = 'none'; }
 
-        // --- CALENDAR LOGIC (FIXED) ---
+        // --- CALENDAR LOGIC ---
         let currentCalDate = new Date(), selectedCalDate = null, activeDateInputIdNo = null, activeDateField = null, activeDateInputEl = null;
         function openCalendar(e, inputEl, idNo, field) {
             e.stopPropagation(); activeDateInputIdNo = idNo; activeDateField = field; activeDateInputEl = inputEl;
-            
-            // Try formatting existing value to correctly highlight
-            let val = inputEl.value;
-            if(val && val.includes('/')) {
-                let p = val.split('/');
-                if(p.length === 3) {
-                    currentCalDate = new Date(p[2], p[1]-1, p[0]);
-                    selectedCalDate = new Date(p[2], p[1]-1, p[0]);
-                } else {
-                    currentCalDate = new Date(); selectedCalDate = new Date();
-                }
-            } else {
-                currentCalDate = new Date(); selectedCalDate = new Date();
-            }
-
             let picker = document.getElementById('customDatePicker'); let rect = inputEl.getBoundingClientRect();
             picker.style.display = 'flex'; picker.style.top = (rect.bottom + window.scrollY) + 'px'; picker.style.left = (rect.left + window.scrollX) + 'px';
             renderCalendar();
@@ -865,7 +827,7 @@
                     else {
                         cell.innerText = date; let d = date;
                         cell.onclick = (ev) => { ev.stopPropagation(); selectedCalDate = new Date(y, m, d); saveCalendarDate(); };
-                        if (selectedCalDate?.getDate() === date && selectedCalDate?.getMonth() === m && selectedCalDate?.getFullYear() === y) cell.className = 'selected';
+                        if (selectedCalDate?.getDate() === date && selectedCalDate?.getMonth() === m) cell.className = 'selected';
                         date++;
                     }
                     row.appendChild(cell);
@@ -874,24 +836,11 @@
             }
         }
         function changeMonth(delta) { currentCalDate.setMonth(currentCalDate.getMonth() + delta); renderCalendar(); }
-        
         function saveCalendarDate() {
             if(selectedCalDate) {
                 let dmy = ("0" + selectedCalDate.getDate()).slice(-2) + "/" + ("0" + (selectedCalDate.getMonth() + 1)).slice(-2) + "/" + selectedCalDate.getFullYear();
-                if(activeDateInputIdNo === 0) {
-                    document.getElementById(activeDateField).value = dmy;
-                } else {
-                    if(activeDateInputEl) activeDateInputEl.value = dmy;
-                    window.updateModel(activeDateInputIdNo, activeDateField, dmy);
-                    renderTable();
-                    if(activeDateField === 'issueDate') { 
-                        let tr = document.getElementById(`row-${activeDateInputIdNo}`); 
-                        if(tr) tr.querySelector('.name-input')?.focus(); 
-                    } else { 
-                        let tr = document.getElementById(`row-${activeDateInputIdNo}`); 
-                        if(tr && tr.nextElementSibling) tr.nextElementSibling.querySelector('.issue-date-input')?.focus(); 
-                    }
-                }
+                if(activeDateInputIdNo === 0) { document.getElementById(activeDateField).value = dmy; } 
+                else { if(activeDateInputEl) activeDateInputEl.value = dmy; window.updateModel(activeDateInputIdNo, activeDateField, dmy); renderTable(); }
             }
             closeCalendar();
         }
@@ -900,37 +849,13 @@
 
         // --- KEYBOARD SEQUENCING ---
         function handleDateKey(e, input, next, idNo, field) {
-            if(e.key === '+') { 
-                e.preventDefault(); 
-                openCalendar(e, input, idNo, field); 
-            }
+            if(e.key === '+') { e.preventDefault(); openCalendar(e, input, idNo, field); }
             else if(e.key === 'Enter') {
                 e.preventDefault();
-                let picker = document.getElementById('customDatePicker');
-                if (picker.style.display === 'flex' && activeDateInputEl === input) {
-                    if(!selectedCalDate) selectedCalDate = new Date();
-                    saveCalendarDate();
-                    return;
-                }
                 if(!input.value) { let d = new Date(); input.value = ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear(); }
                 window.updateModel(idNo, field, input.value);
                 if(next === 'next-row') { let tr = input.closest('tr').nextElementSibling; if(tr) tr.querySelector('.issue-date-input').focus(); }
                 else { input.closest('tr').querySelector('.'+next).focus(); }
-            }
-        }
-        function handleColorKey(e, selectEl, next, idNo) {
-            if(e.key === '+') {
-                e.preventDefault();
-                let opts = selectEl.options;
-                if(opts.length > 0) {
-                    let nextIdx = (selectEl.selectedIndex + 1) % opts.length;
-                    if(opts[nextIdx].value === "" && opts.length > 1) nextIdx = (nextIdx + 1) % opts.length;
-                    selectEl.selectedIndex = nextIdx;
-                    window.updateModel(idNo, 'color', selectEl.value);
-                }
-            } else if(e.key === 'Enter') {
-                e.preventDefault();
-                selectEl.closest('tr').querySelector('.'+next).focus();
             }
         }
         function handleGenericEnter(e, input, next) { if(e.key === 'Enter') { e.preventDefault(); input.closest('tr').querySelector('.'+next).focus(); } }
@@ -962,31 +887,18 @@
             const tbody = document.getElementById('userTableBody'); tbody.innerHTML = '';
             window.usersModel.forEach((u, i) => {
                 const tr = document.createElement('tr');
-                let passHtml = "***";
-                if(window.currentUser && window.currentUser.role === 'Admin') {
-                    passHtml = `<input type="text" value="${u.password}" class="grid-input" style="border:1px solid #CCC !important; width:90%; text-align:left; padding-left:4px;" onchange="window.updateUserPass(${i}, this.value)">`;
-                }
-                tr.innerHTML = `<td>${u.username}</td><td>${passHtml}</td><td>${u.section}</td><td>${u.floor}</td><td>${u.role}</td><td><span style="color:red; cursor:pointer;" onclick="window.deleteUser(${i})">Delete</span></td>`;
+                tr.innerHTML = `<td>${u.username}</td><td>***</td><td>${u.section}</td><td>${u.floor}</td><td>${u.role}</td><td><span style="color:red; cursor:pointer;" onclick="window.deleteUser(${i})">Delete</span></td>`;
                 tbody.appendChild(tr);
             });
         }
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.target.classList.contains('grid-input')) {
-                let td = e.target.closest('td'), tr = td.closest('tr');
-                let idx = Array.from(tr.children).indexOf(td);
-                if(e.key === 'ArrowDown' && e.target.type !== 'select-one') tr.nextElementSibling?.children[idx]?.querySelector('.grid-input')?.focus();
-                if(e.key === 'ArrowUp' && e.target.type !== 'select-one') tr.previousElementSibling?.children[idx]?.querySelector('.grid-input')?.focus();
-            }
-        });
 
-        // --- REPORT GENERATION (COMPACT FONTS) ---
+        // --- REPORT GENERATION (COMPACT AUTO-WIDTH DESIGN) ---
         function generateReport() {
             let type = document.getElementById('repSelectInput').value; 
             let dFromStr = document.getElementById('repStartDate').value; 
             let dToStr = document.getElementById('repEndDate').value; 
-            let floor = document.getElementById('repFloorInput').value.trim() || 'All'; 
-            let block = document.getElementById('repBlockInput').value.trim() || 'All';
+            let floorInput = document.getElementById('repFloorInput').value.trim() || 'All'; 
+            let blockInput = document.getElementById('repBlockInput').value.trim() || 'All';
 
             const parseDate = (dStr) => {
                 if(!dStr) return null;
@@ -997,90 +909,158 @@
             let sDate = parseDate(dFromStr); 
             let eDate = parseDate(dToStr);
 
-            let data = window.rowsModel.filter(r => {
+            let rawData = window.rowsModel.filter(r => {
                 if (!r.workerName || !r.receiveQty || r.bookName !== window.currentProductionBook) return false;
-                let bSearch = block.toLowerCase(); let fSearch = floor.toLowerCase();
+                let bSearch = blockInput.toLowerCase(); let fSearch = floorInput.toLowerCase();
                 if (bSearch !== 'all' && bSearch !== '' && !(r.blockNo && r.blockNo.toLowerCase().includes(bSearch))) return false;
                 if (fSearch !== 'all' && fSearch !== '' && !(r.floor && r.floor.toLowerCase().includes(fSearch))) return false;
                 let rDate = parseDate(r.receiveDate || r.issueDate);
-                if (rDate) { if (sDate && rDate < sDate) return false; if (eDate && rDate > eDate) return false; } else { return false; } return true;
+                if (rDate) { if (sDate && rDate < sDate) return false; if (eDate && rDate > eDate) return false; } else { return false; } 
+                return true;
             });
 
-            if (data.length === 0) { alert("No data found!"); return; }
+            if (rawData.length === 0) { alert("No data found!"); return; }
 
-            let title = "Production Report"; let theadHtml = ''; let tbodyHtml = '';
+            let title = "Production Report"; 
+            let theadHtml = ''; 
+            let tbodyHtml = '';
 
-            if(type === '4_Top_Sheet') {
+            if (type === '4_Top_Sheet') {
                 title = "Production Top Sheet";
-                theadHtml = `<tr><th style="width: 40px;">SL</th><th>Buyer</th><th>Style Name</th><th>Process</th><th>Total Qty</th><th>Rate</th><th>Amount</th></tr>`;
-                let sum = {};
-                data.forEach(r => {
-                    let styleObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook); 
-                    let bName = styleObj ? styleObj.buyer : 'UNKNOWN';
-                    let rateObj = styleObj ? styleObj.rates.find(rt => rt.name === r.rate) : null; 
-                    let tk = rateObj ? parseFloat(rateObj.tk) || 0 : 0;
-                    let key = `${bName}_${r.styleName}_${r.rate}`; 
-                    if (!sum[key]) sum[key] = { buyer: bName, style: r.styleName, process: r.rate, tk: tk, q: 0, a: 0 };
-                    sum[key].q += parseInt(r.receiveQty) || 0; 
-                    sum[key].a += (parseInt(r.receiveQty) || 0) * tk;
+                theadHtml = `<tr>
+                    <th style="width: 40px;">SL</th>
+                    <th>Buyer</th>
+                    <th>Style Name</th>
+                    <th>Process Name</th>
+                    <th>Total Receive Qty</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                </tr>`;
+                let sumMap = {};
+                rawData.forEach(r => {
+                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
+                    let buyer = sObj ? sObj.buyer : 'Unknown';
+                    let rObj = sObj ? sObj.rates.find(rt => rt.name === r.rate) : null;
+                    let tk = rObj ? parseFloat(rObj.tk) || 0 : 0;
+                    let key = `${buyer}_${r.styleName}_${r.rate}`;
+                    if(!sumMap[key]) sumMap[key] = { buyer, style: r.styleName, process: r.rate, rate: tk, qty: 0 };
+                    sumMap[key].qty += (parseInt(r.receiveQty) || 0);
                 });
-                let sl = 1; let gq = 0; let ga = 0;
-                Object.values(sum).forEach(row => {
-                    tbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left;">${row.buyer}</td><td style="text-align:left;">${row.style}</td><td>${row.process}</td><td>${row.q}</td><td>${row.tk}</td><td>${row.a.toFixed(2)}</td></tr>`;
-                    gq += row.q; ga += row.a;
+                let sl = 1, tQ = 0, tA = 0;
+                Object.values(sumMap).forEach(row => {
+                    let amt = row.qty * row.rate;
+                    tbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left;">${row.buyer}</td><td style="text-align:left;">${row.style}</td><td>${row.process}</td><td>${row.qty}</td><td>${row.rate}</td><td>${amt.toFixed(0)}</td></tr>`;
+                    tQ += row.qty; tA += amt;
                 });
-                tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">GRAND TOTAL</td><td>${gq}</td><td></td><td>${ga.toFixed(2)}</td></tr>`;
-            }
+                tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">GRAND TOTAL</td><td>${tQ}</td><td></td><td>${tA.toFixed(0)}</td></tr>`;
+            } 
             else if (type === '3_StyleWise_Reports') {
-                title = "Employee Production Summery";
-                let map = {};
-                data.forEach(r => {
-                    if(!map[r.workerName]) map[r.workerName] = { id: r.idNo, name: r.workerName, block: r.blockNo, q: 0 };
-                    map[r.workerName].q += parseInt(r.receiveQty) || 0;
+                title = "All Employee Production Summery";
+                let empMap = {};
+                rawData.forEach(r => {
+                    let key = r.workerName;
+                    if(!empMap[key]) empMap[key] = { name: r.workerName, mobile: r.mobileNo, block: r.blockNo, styles: {} };
+                    let sKey = `${r.styleName}_${r.rate}`;
+                    if(!empMap[key].styles[sKey]) empMap[key].styles[sKey] = { name: r.styleName, rate: r.rate, q: 0 };
+                    empMap[key].styles[sKey].q += (parseInt(r.receiveQty) || 0);
                 });
-                theadHtml = `<tr><th style="width:40px;">SL</th><th>ID</th><th style="text-align:left;">Employee Name</th><th>Block</th><th>Total Qty</th></tr>`;
-                let sl = 1; let gt = 0;
-                Object.values(map).forEach(w => {
-                    tbodyHtml += `<tr><td>${sl++}</td><td>${w.id}</td><td style="text-align:left;">${w.name}</td><td>${w.block}</td><td>${w.q}</td></tr>`;
-                    gt += w.q;
+                let uniqueStyles = [];
+                rawData.forEach(r => {
+                    let sKey = `${r.styleName}_${r.rate}`;
+                    if(!uniqueStyles.find(x => x.key === sKey)) uniqueStyles.push({ key: sKey, name: r.styleName, rate: r.rate });
                 });
-                tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">GRAND TOTAL</td><td>${gt}</td></tr>`;
+                theadHtml = `<tr>
+                    <th rowspan="2" style="width:30px;">SL</th>
+                    <th rowspan="2" style="width:140px;">NAME</th>
+                    <th rowspan="2" style="width:100px;">MOBILE NUMBER</th>
+                    <th rowspan="2" style="width:50px;">BLOCK</th>
+                    ${uniqueStyles.map(s => `<th style="border-bottom:none;">${s.name}</th>`).join('')}
+                    <th rowspan="2" style="width:60px;">Tot Prod</th>
+                    <th rowspan="2" style="width:100px;">REMARKS</th>
+                </tr><tr>
+                    ${uniqueStyles.map(s => `<th style="border-top:none; font-size:9px;">${s.rate}</th>`).join('')}
+                </tr>`;
+                let sl = 1, gTotal = 0;
+                Object.values(empMap).forEach(emp => {
+                    let rowT = 0;
+                    let cells = uniqueStyles.map(s => { let q = emp.styles[s.key]?.q || 0; rowT += q; return `<td>${q || ''}</td>`; }).join('');
+                    tbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left; padding-left:5px;">${emp.name}</td><td>${emp.mobile}</td><td>${emp.block}</td>${cells}<td style="font-weight:bold;">${rowT}</td><td></td></tr>`;
+                    gTotal += rowT;
+                });
+                tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">TOTAL</td>${uniqueStyles.map(() => `<td></td>`).join('')}<td>${gTotal}</td><td></td></tr>`;
             }
             else {
-                let showAmt = (type === '2_OpWiseProdDetail_Block_Amount');
-                theadHtml = `<tr><th>SL</th><th>Date</th><th>ID</th><th style="text-align:left;">Name</th><th>Block</th><th>Style</th><th>Color</th><th>Qty</th>${showAmt ? `<th>Rate</th><th>Amt</th>` : ''}</tr>`;
-                let sl = 1; let tQ = 0; let tA = 0;
-                data.forEach(r => {
-                    let sO = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
-                    let rO = sO ? sO.rates.find(rt => rt.name === r.rate) : null;
-                    let tk = rO ? parseFloat(rO.tk) || 0 : 0;
-                    let q = parseInt(r.receiveQty) || 0; let a = q * tk;
-                    tQ += q; tA += a;
-                    tbodyHtml += `<tr><td>${sl++}</td><td>${r.receiveDate||r.issueDate}</td><td>${r.idNo}</td><td style="text-align:left;">${r.workerName}</td><td>${r.blockNo}</td><td>${r.styleName}</td><td>${r.color}</td><td>${q}</td>${showAmt ? `<td>${tk}</td><td>${a.toFixed(2)}</td>` : ''}</tr>`;
+                let isAmt = (type === '2_OpWiseProdDetail_Block_Amount');
+                title = isAmt ? "Operator Wise Production Report" : "Operator Wise Production Report";
+                let empMap = {};
+                rawData.forEach(r => {
+                    let key = r.workerName;
+                    if(!empMap[key]) empMap[key] = { name: r.workerName, mobile: r.mobileNo, block: r.blockNo, styles: {} };
+                    let sKey = `${r.styleName}_${r.rate}`;
+                    if(!empMap[key].styles[sKey]) {
+                        let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
+                        let rtObj = sObj ? sObj.rates.find(rt => rt.name === r.rate) : null;
+                        empMap[key].styles[sKey] = { name: r.styleName, rate: r.rate, q: 0, tk: rtObj ? parseFloat(rtObj.tk) || 0 : 0 };
+                    }
+                    empMap[key].styles[sKey].q += (parseInt(r.receiveQty) || 0);
                 });
-                tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="7">TOTAL</td><td>${tQ}</td>${showAmt ? `<td></td><td>${tA.toFixed(2)}</td>` : ''}</tr>`;
+                let uniqueStyles = [];
+                rawData.forEach(r => {
+                    let sKey = `${r.styleName}_${r.rate}`;
+                    if(!uniqueStyles.find(x => x.key === sKey)) uniqueStyles.push({ key: sKey, name: r.styleName, rate: r.rate });
+                });
+                theadHtml = `<tr>
+                    <th rowspan="2" style="width:30px;">SL</th>
+                    <th rowspan="2" style="width:140px;">NAME</th>
+                    <th rowspan="2" style="width:100px;">MOBILE NUMBER</th>
+                    <th rowspan="2" style="width:50px;">BLOCK</th>
+                    ${uniqueStyles.map(s => `<th style="border-bottom:none;">${s.name}</th>`).join('')}
+                    <th rowspan="2" style="width:60px;">TOTAL</th>
+                    ${isAmt ? `<th rowspan="2" style="width:60px;">AMOUNT</th>` : ''}
+                    <th rowspan="2" style="width:80px;">REMARKS</th>
+                </tr><tr>
+                    ${uniqueStyles.map(s => `<th style="border-top:none; font-size:9px;">${s.rate}</th>`).join('')}
+                </tr>`;
+                let sl = 1, gQ = 0, gA = 0;
+                Object.values(empMap).forEach(emp => {
+                    let rQ = 0, rA = 0;
+                    let cells = uniqueStyles.map(s => {
+                        let d = emp.styles[s.key];
+                        if(d) { rQ += d.q; rA += (d.q * d.tk); return `<td>${d.q}</td>`; }
+                        return `<td></td>`;
+                    }).join('');
+                    tbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left; padding-left:5px;">${emp.name}</td><td>${emp.mobile}</td><td>${emp.block}</td>${cells}<td style="font-weight:bold;">${rQ}</td>${isAmt ? `<td style="font-weight:bold;">${rA.toFixed(0)}</td>` : ''}<td></td></tr>`;
+                    gQ += rQ; gA += rA;
+                });
+                tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">TOTAL</td>${uniqueStyles.map(() => `<td></td>`).join('')}<td>${gQ}</td>${isAmt ? `<td>${gA.toFixed(0)}</td>` : ''}<td></td></tr>`;
             }
 
-            let html = `<html><head><title>Report</title><style>
-                body { font-family: Tahoma; padding: 20px; font-size: 11px; }
-                .h { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
-                .report-table { width: auto; min-width: 450px; margin: 0 auto; border-collapse: collapse; }
-                .report-table th, .report-table td { border: 1px solid #000; padding: 4px 6px; text-align: center; font-size: 10px; }
+            let html = `<html><head><title>Matrix Production Report</title><style>
+                body { font-family: 'Tahoma', sans-serif; padding: 40px; color: #000; background: #fff; text-align: center; }
+                .btn-print { position: fixed; top: 20px; right: 20px; background: #0078D7; color: white; border: none; padding: 8px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+                .header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
+                .header h3 { margin: 4px 0; font-size: 13px; font-weight: bold; }
+                .header p { margin: 2px 0; font-size: 10px; font-weight: bold; }
+                .table-wrapper { display: flex; justify-content: center; width: 100%; margin-top: 20px; }
+                .report-table { border-collapse: collapse; width: auto; min-width: 500px; }
+                .report-table th, .report-table td { border: 1px solid #000; padding: 4px 6px; font-size: 10px; text-align: center; }
                 .report-table th { background: #E1E1E1; font-weight: bold; }
-                .f { display: flex; justify-content: space-around; margin-top: 40px; }
-                .s { border-top: 1px solid #000; width: 120px; text-align: center; padding-top: 3px; font-weight: bold; }
-                @media print { .no-p { display: none; } }
+                @media print { .btn-print { display: none; } body { padding: 10px; } }
             </style></head><body>
-                <div class="h">
-                    <h2 style="margin:0; font-size:16px;">MATRIX SWEATERS LIMITED</h2>
-                    <p style="margin:2px;"><b>Section:</b> ${window.currentProductionBook} | <b>Report:</b> ${title}</p>
-                    <p style="margin:2px;"><b>Date:</b> ${dFromStr} - ${dToStr} | <b>Floor:</b> ${floor} | <b>Block:</b> ${block}</p>
+                <button class="btn-print" onclick="window.print()">Print Report</button>
+                <div class="header">
+                    <h2>Matrix Sweaters Limited</h2>
+                    <h3>${title}</h3>
+                    <p>Floor : ${floorInput} &nbsp;&nbsp; Section: ${window.currentProductionBook}</p>
+                    <p>Date Range: ${dFromStr} to ${dToStr}</p>
                 </div>
-                <table class="report-table"><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table>
-                <div class="f"><div class="s">Prepared By</div><div class="s">Checked By</div><div class="s">Manager / GM</div></div>
-                <div class="no-p" style="text-align:center; margin-top:20px;"><button onclick="window.print()" style="padding:5px 20px; font-weight:bold; cursor:pointer;">Print Report</button></div>
+                <div class="table-wrapper">
+                    <table class="report-table">
+                        <thead>${theadHtml}</thead>
+                        <tbody>${tbodyHtml}</tbody>
+                    </table>
+                </div>
             </body></html>`;
-
             let win = window.open('', '_blank');
             win.document.write(html); win.document.close();
         }
