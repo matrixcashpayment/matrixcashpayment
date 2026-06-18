@@ -22,8 +22,6 @@
         }
         .window-title-bar .title { display: flex; align-items: center; gap: 8px; font-weight: bold; }
         .window-controls { display: flex; gap: 5px; }
-        .window-controls span { cursor: pointer; padding: 0 6px; font-family: Arial; background: #C0C0C0; color: #000; border: 1px solid #FFF; border-bottom-color: #888; border-right-color: #888; font-weight: bold;}
-        .window-controls span:active { border-color: #888; border-bottom-color: #FFF; border-right-color: #FFF; }
 
         /* Top Menu */
         .menu-bar { background-color: #F0F0F0; border-bottom: 1px solid #E0E0E0; padding: 4px 5px; display: flex; align-items: center; gap: 2px; }
@@ -38,6 +36,13 @@
         }
         .dropdown-item { padding: 4px 15px 4px 25px; color: #000; cursor: default; }
         .dropdown-item:hover { background-color: #91C9F7; outline: 1px solid #3399FF; }
+
+        /* Submenu Styling */
+        .dropdown-submenu { position: relative; }
+        .dropdown-submenu:hover .submenu-content { display: block; }
+        .submenu-content { display: none; position: absolute; left: 100%; top: 0; background-color: #F2F2F2; border: 1px solid #999; box-shadow: 2px 2px 4px rgba(0,0,0,0.2); min-width: 180px; z-index: 1001; padding: 2px 0; }
+        .submenu-content .dropdown-item { padding: 4px 15px 4px 25px; color: #000; cursor: default; }
+        .submenu-content .dropdown-item:hover { background-color: #91C9F7; outline: 1px solid #3399FF; }
 
         /* Main Area */
         .main-container { padding: 8px; flex-grow: 1; display: flex; flex-direction: column; background: #F0F0F0; overflow: hidden; }
@@ -64,11 +69,15 @@
 
         /* Header Information Section */
         .info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .highlight-pill { background-color: #C1EB7B; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 11px; transition: background 0.3s; border: 1px solid #A0A0A0; cursor: pointer; }
+        .highlight-pill { background-color: #C1EB7B; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 13px; transition: background 0.3s; border: 1px solid #A0A0A0; cursor: pointer; }
         .highlight-pill:hover { background-color: #A3D951; }
         .highlight-pill.active-pill { background-color: #0078D7 !important; color: white !important; border-color: #005A9E; }
 
-        .style-details-banner { display: flex; gap: 20px; padding: 5px 10px 8px 10px; margin-top: 6px; margin-bottom: 6px; border-bottom: 1px solid #1e395b; }
+        /* 2.5CM GAP AND 5PX MARGIN TOP MAINTAINED */
+        #infoRowStyles { min-height: 2.5cm; margin-top: 5px; margin-bottom: 5px; }
+
+        /* Style Banner */
+        .style-details-banner { display: flex; gap: 20px; padding: 8px 10px 5px 10px; margin-top: 5px; margin-bottom: 5px; border-top: 1px solid #1e395b; border-bottom: none; }
         .banner-value { display: inline-block; min-width: 80px; padding: 0 5px; color: #1e395b; font-weight: bold; }
 
         /* Tabs */
@@ -80,11 +89,11 @@
         /* Grid / Data Table */
         .grid-container { flex-grow: 1; background: #FFF; border: 1px solid #A0A0A0; border-top: none; overflow-y: scroll; display: block; height: 100px; scroll-behavior: smooth;}
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border: 1px solid #D5D5D5; padding: 2px 4px; text-align: center; cursor: default; height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; }
+        th, td { border: 1px solid #D5D5D5; padding: 2px 4px; text-align: center; cursor: default; height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; font-size: 10px; }
         th { background: #F0F0F0; border-right: 1px solid #C0C0C0; border-bottom: 1px solid #C0C0C0; font-weight: normal; position: sticky; top: 0; box-shadow: 0 1px 0 #999; z-index: 10; }
         tr:nth-child(even) { background-color: #F9F9F9; }
 
-        .grid-input { width: 100%; height: 100%; border: none !important; outline: none !important; background: transparent !important; text-align: center; font-family: 'Tahoma'; font-size: 11px; padding: 0; margin: 0; color: inherit; }
+        .grid-input { width: 100%; height: 100%; border: none !important; outline: none !important; background: transparent !important; text-align: center; font-family: 'Tahoma'; font-size: 10px; padding: 0; margin: 0; color: inherit; }
         .grid-input:focus { background-color: rgba(0, 120, 215, 0.1) !important; }
 
         .locked-row { background-color: #E5F1FB !important; }
@@ -105,6 +114,10 @@
         .popup-qty-input:focus { background-color: #3366CC; color: #FFF; }
         .popup-buttons { display: flex; justify-content: space-between; align-items: center; }
         .popup-buttons button { width: 70px; height: 24px; font-size: 11px; font-family: 'Tahoma'; }
+        
+        .popup-color-item { cursor: pointer; padding: 4px 6px; border-bottom: 1px solid #EFEFEF; outline: none; text-align: left; font-weight: bold;}
+        .popup-color-item:hover { background-color: #91C9F7; }
+        .popup-color-item.active-item { background-color: #3366CC; color: #FFF; }
 
         /* Status Bar */
         .status-bar { background: #F0F0F0; border-top: 1px solid #D5D5D5; display: flex; align-items: center; font-size: 10px; color: #333; padding: 2px 0;}
@@ -157,14 +170,13 @@
         .calendar-actions button:hover { border-color: #0078D7; background: #E5F1FB; }
     </style>
 </head>
-<body onclick="closeAllMenus(); closeRateQtyPopup(); closeCalendar(false);" onload="initApp()">
+<body onclick="closeAllMenus(); closeRateQtyPopup(); closeColorPopup(); closeCalendar(false);" onload="initApp()">
 
     <!-- Access Denied Modal -->
     <div class="modal-overlay" id="accessDeniedModal" style="z-index: 9999;" onclick="closeAccessDenied()">
         <div class="modal-window" style="width: 320px; text-align: center; border-radius: 2px;" onclick="event.stopPropagation()">
             <div class="window-title-bar" style="background: linear-gradient(90deg, #8B0000, #E81123);">
                 <div class="title">⚠️ Access Denied</div>
-                <div class="window-controls"><span class="close" onclick="closeAccessDenied()">✖</span></div>
             </div>
             <div class="modal-content" style="padding: 25px 20px; color: #333; font-size: 12px; font-weight: bold; line-height: 1.5;" id="accessDeniedMsg"></div>
             <div style="padding: 10px; background: #F0F0F0; border-top: 1px solid #CCC; display: flex; justify-content: center;">
@@ -178,17 +190,16 @@
         <div class="login-box">
             <div class="window-title-bar">
                 <span style="display:flex; align-items:center; gap:5px;">🔑 System Login</span>
-                <div class="window-controls"><span onclick="alert('System Close Disabled')">✖</span></div>
             </div>
             <div class="login-content">
                 <div style="text-align:center; font-weight:bold; color:#000080; margin-bottom: 5px;">Matrix Sweaters Limited</div>
                 <div class="login-row">
                     <label>Username:</label>
-                    <input type="text" id="loginUsername" placeholder="Enter username" onkeydown="if(event.key==='Enter') document.getElementById('loginPassword').focus()">
+                    <input type="text" id="loginUsername" autocomplete="off" placeholder="Enter username" onkeydown="if(event.key==='Enter') document.getElementById('loginPassword').focus()">
                 </div>
                 <div class="login-row">
                     <label>Password:</label>
-                    <input type="password" id="loginPassword" placeholder="Enter password" onkeydown="if(event.key==='Enter') performLogin()">
+                    <input type="password" id="loginPassword" autocomplete="off" placeholder="Enter password" onkeydown="if(event.key==='Enter') performLogin()">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
                     <button onclick="performLogin()" style="width: 80px; font-weight: bold;">Login</button>
@@ -202,26 +213,40 @@
     <!-- Title Bar -->
     <div class="window-title-bar">
         <div class="title" id="windowTitleText">📊 Cash Payment Production | Matrix Sweaters Limited</div>
-        <div class="window-controls"><span>—</span><span>☐</span><span class="close">✖</span></div>
+        <div class="window-controls"></div>
     </div>
 
     <!-- Menu Bar -->
     <div class="menu-bar">
         <div class="menu-item" onclick="goHome()"><span>Home</span></div>
         <div class="menu-item"><span>Salary Information</span></div>
+        
+        <!-- Updated Admin Menu Restructure -->
         <div class="menu-item" id="menuAdminBtn" onclick="toggleMenu('adminMenu', this, event)">
             <span>Admin</span>
             <div class="dropdown" id="adminMenu">
-                <div class="dropdown-item" onclick="openAdminModal(event, 'Linking Book')">Linking Book</div>
-                <div class="dropdown-item" onclick="openAdminModal(event, 'Trimming Book')">Trimming Book</div>
-                <div class="dropdown-item" onclick="openAdminModal(event, 'Mending Book')">Mending Book</div>
-                <div class="dropdown-item" onclick="openAdminModal(event, 'Iron Book')">Iron Book</div>
-                <div class="dropdown-item" onclick="openAdminModal(event, 'Sewing Book')">Sewing Book</div>
-                <div class="dropdown-item" onclick="openAdminModal(event, 'OverLock Book')">OverLock Book</div>
-                <div class="dropdown-item" onclick="openAdminModal(event, 'Packing Book')">Packing Book</div>
+                <!-- Create Style with Submenu -->
+                <div class="dropdown-item dropdown-submenu">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Create Style</span><span style="font-size: 8px;">▶</span>
+                    </div>
+                    <div class="submenu-content">
+                        <div class="dropdown-item" onclick="openAdminModal(event, 'Linking Book')">Linking Book</div>
+                        <div class="dropdown-item" onclick="openAdminModal(event, 'Trimming Book')">Trimming Book</div>
+                        <div class="dropdown-item" onclick="openAdminModal(event, 'Mending Book')">Mending Book</div>
+                        <div class="dropdown-item" onclick="openAdminModal(event, 'Iron Book')">Iron Book</div>
+                        <div class="dropdown-item" onclick="openAdminModal(event, 'Sewing Book')">Sewing Book</div>
+                        <div class="dropdown-item" onclick="openAdminModal(event, 'OverLock Book')">OverLock Book</div>
+                        <div class="dropdown-item" onclick="openAdminModal(event, 'Packing Book')">Packing Book</div>
+                    </div>
+                </div>
+                <!-- Password Menu Item -->
+                <div class="dropdown-item" onclick="openPasswordDashboard(event)">Password</div>
             </div>
         </div>
+        
         <div class="menu-item"><span>Report</span></div>
+        
         <div class="menu-item" onclick="toggleMenu('productionMenu', this, event)">
             <span>Production</span>
             <div class="dropdown" id="productionMenu">
@@ -234,8 +259,6 @@
                 <div class="dropdown-item" id="menu-prod-PACKING" onclick="openProductionBook(event, 'Packing Book')">Packing Book</div>
             </div>
         </div>
-        <div class="menu-item" id="menuPasswordBtn" onclick="openPasswordDashboard(event)"><span>Password</span></div>
-        <div class="menu-item" onclick="logout()" style="margin-left: auto; border-left: 1px solid #CCC;"><span style="color: #E81123; font-weight: bold;">Logout</span></div>
     </div>
 
     <!-- Main Application Area -->
@@ -247,32 +270,36 @@
             <div class="info-row" id="infoRowSearch" style="margin-top: 5px; z-index: 100;">
                 <label style="width: 35px; font-weight: bold;">Search:</label>
                 <div style="position: relative; display: inline-block;">
-                    <input type="text" id="styleSearchInput" value="" placeholder="Search styles..." style="width: 140px; background: #FFF;" onkeyup="filterStyles()" onfocus="showStyleDropdown(event)" onclick="event.stopPropagation()">
+                    <!-- COMPLETELY DISABLED BROWSER HISTORY AUTOFILL -->
+                    <input type="text" id="styleSearchInput" name="disable_history_1" autocomplete="nope" spellcheck="false" value="" placeholder="Search styles..." style="width: 140px; background: #FFF;" oninput="filterStylesInstant()" onkeydown="handleStyleKey(event)" onfocus="filterStylesInstant()" onclick="event.stopPropagation()">
                     <div id="styleDropdown" class="dropdown" style="top: 100%; left: 0; min-width: 140px; max-height: 200px; overflow-y: auto;"></div>
                 </div>
             </div>
             
+            <!-- STYLES ROW: 5px Margin Top added and 2.5cm minimum gap applied -->
             <div class="info-row" id="infoRowStyles" style="align-items: flex-start;">
                 <label style="width: 35px; font-weight: bold; color: #666; padding-top: 3px;">Styles:</label>
-                <div id="defaultStylesList" style="display: flex; flex-wrap: wrap; gap: 5px; flex: 1; max-height: 45px; overflow-y: auto;"></div>
+                <div id="defaultStylesList" style="display: flex; flex-wrap: wrap; gap: 5px; flex: 1; align-content: flex-start; overflow-y: auto;"></div>
             </div>
 
-            <div class="info-row" id="infoRowId" style="justify-content: space-between; align-items: flex-end; margin-top: 5px;">
-                <div style="display: flex; gap: 20px; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <label style="font-weight: bold; color: #1e395b;">Id No:</label>
-                        <input type="number" id="searchIdInput" placeholder="Start ID" style="width: 70px;" oninput="renderTable()" onkeydown="handleSearchIdEnter(event)">
-                        <span style="color: #666;">(Type ID & press Enter to jump)</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active Style Information Banner -->
+            <!-- Active Style Information Banner (Top border added, placed directly above the ID row) -->
             <div class="style-details-banner" id="activeStyleDetails">
                  <span><span style="color:#666;">Buyer:</span> <span id="lblBuyer" class="banner-value"></span></span>
                  <span><span style="color:#666;">Style:</span> <span id="lblStyle" class="banner-value" style="min-width: 120px;"></span></span>
                  <span><span style="color:#666;">Rate:</span> <span id="lblRate" class="banner-value" style="min-width: 100px;"></span></span>
                  <span><span style="color:#666;">Create Date:</span> <span id="lblDate" class="banner-value" style="min-width: 70px;"></span></span>
+            </div>
+
+            <!-- ID No Row -->
+            <div class="info-row" id="infoRowId" style="justify-content: space-between; align-items: flex-end; margin-bottom: 5px;">
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label style="font-weight: bold; color: #1e395b;">Id No:</label>
+                        <!-- COMPLETELY DISABLED BROWSER HISTORY AUTOFILL -->
+                        <input type="number" id="searchIdInput" name="disable_history_2" autocomplete="nope" placeholder="Start ID" style="width: 70px;" oninput="renderTable()" onkeydown="handleSearchIdEnter(event)">
+                        <span style="color: #666;">(Type ID & press Enter to jump)</span>
+                    </div>
+                </div>
             </div>
 
             <!-- TABS -->
@@ -305,17 +332,17 @@
                     <legend style="color: #000; font-size: 11px; padding: 0 5px;">Production Detail Reports</legend>
                     <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 15px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="text" id="repStartDate" style="width: 85px; text-align: center;" onclick="openCalendar(event, this, 0, 'repStartDate')">
+                            <input type="text" id="repStartDate" autocomplete="off" style="width: 85px; text-align: center;" onclick="openCalendar(event, this, 0, 'repStartDate')">
                             <span>To</span>
-                            <input type="text" id="repEndDate" style="width: 85px; text-align: center;" onclick="openCalendar(event, this, 0, 'repEndDate')">
+                            <input type="text" id="repEndDate" autocomplete="off" style="width: 85px; text-align: center;" onclick="openCalendar(event, this, 0, 'repEndDate')">
                         </div>
                     </div>
                     <div style="display: flex; gap: 40px; margin-bottom: 15px;">
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            <label style="width: 40px;">Floor:</label><input type="text" id="repFloorInput" value="" placeholder="All" style="width: 80px;"> 
+                            <label style="width: 40px;">Floor:</label><input type="text" id="repFloorInput" autocomplete="off" value="" placeholder="All" style="width: 80px;"> 
                         </div>
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            <label style="width: 40px;">Block:</label><input type="text" id="repBlockInput" value="" placeholder="All" style="width: 80px;">
+                            <label style="width: 40px;">Block:</label><input type="text" id="repBlockInput" autocomplete="off" value="" placeholder="All" style="width: 80px;">
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -336,8 +363,8 @@
                 <fieldset style="border: 1px solid #C0C0C0; padding: 15px; border-radius: 2px; background: #F0F0F0; margin-bottom: 10px;">
                     <legend style="color: #000; font-size: 11px; padding: 0 5px; font-weight: bold;">User Account Management</legend>
                     <div style="display: flex; gap: 15px; align-items: flex-end;">
-                        <div style="display: flex; flex-direction: column; gap: 4px;"><label>Username</label><input type="text" id="u_name" style="width: 140px;" placeholder="Username" required></div>
-                        <div style="display: flex; flex-direction: column; gap: 4px;"><label>Password</label><input type="password" id="u_pass" style="width: 140px;" placeholder="Password" required></div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;"><label>Username</label><input type="text" id="u_name" autocomplete="off" style="width: 140px;" placeholder="Username" required></div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;"><label>Password</label><input type="password" id="u_pass" autocomplete="off" style="width: 140px;" placeholder="Password" required></div>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <label>Section</label>
                             <select id="u_section" style="width: 120px;">
@@ -377,9 +404,13 @@
         <div class="status-item text-red" id="statusUser">User: --</div>
         <div class="status-item text-red" id="statusSection">Section: --</div>
         <div class="status-item text-red" id="statusFloor">Floor: --</div>
-        <div class="status-item" id="statusDate" style="border-right: none;">Login Date: --</div>
+        <div class="status-item" id="statusDate">Login Date: --</div>
+        <div class="status-item" style="border-right: none; margin-left: auto;">
+            <span onclick="logout()" style="color: #E81123; font-weight: bold; cursor: pointer; border-left: 1px solid #CCC; padding-left: 10px;">Logout</span>
+        </div>
     </div>
 
+    <!-- Rate Popup -->
     <div class="rate-qty-popup" id="rateQtyPopup" onclick="event.stopPropagation()">
         <table class="popup-table">
             <thead><tr><th style="width:75%;">RateName</th><th style="width:25%; text-align:right;">Qty</th></tr></thead>
@@ -391,19 +422,30 @@
         </div>
     </div>
 
+    <!-- Color Popup Modal -->
+    <div class="rate-qty-popup" id="colorPopup" onclick="event.stopPropagation()" style="width: 180px;">
+        <table class="popup-table">
+            <thead><tr><th>Select Color</th></tr></thead>
+            <tbody id="popupColorTableBody"></tbody>
+        </table>
+        <div class="popup-buttons" style="justify-content: space-between;">
+            <button onclick="deleteColor()">Clear</button>
+            <button onclick="closeColorPopup()">Cancel</button>
+        </div>
+    </div>
+
     <div id="nameDropdown" class="name-autocomplete" onclick="event.stopPropagation()"></div>
 
     <div class="modal-overlay" id="adminModal" onclick="closeAdminModal(event)">
         <div class="modal-window" onclick="event.stopPropagation()">
             <div class="window-title-bar">
                 <div class="title" id="modalTitle">Add Style Data</div>
-                <div class="window-controls"><span class="close" onclick="closeAdminModal(event)">✖</span></div>
             </div>
             
             <div class="modal-content">
                 <div style="display: flex; gap: 10px;">
-                    <div class="modal-row" style="flex: 1;"><label>Buyer:</label><input type="text" id="modBuyer" style="flex:1;"></div>
-                    <div class="modal-row" style="flex: 1;"><label>Style:</label><input type="text" id="modStyle" style="flex:1;"></div>
+                    <div class="modal-row" style="flex: 1;"><label>Buyer:</label><input type="text" id="modBuyer" autocomplete="off" style="flex:1;"></div>
+                    <div class="modal-row" style="flex: 1;"><label>Style:</label><input type="text" id="modStyle" autocomplete="off" style="flex:1;"></div>
                 </div>
                 <div style="display: flex; gap: 15px; margin-top: 10px;">
                     <div style="flex: 1; display: flex; flex-direction: column;">
@@ -432,10 +474,13 @@
                 <div style="margin-top: 10px; border-top: 1px solid #CCC; padding-top: 10px; display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <label style="font-weight: bold; color: #1e395b;">Blank Rows For Book:</label>
-                        <label>Start:</label><input type="number" id="tcStart" style="width: 50px; text-align: center;" placeholder="1">
-                        <label>End:</label><input type="number" id="tcEnd" style="width: 50px; text-align: center;" placeholder="50">
+                        <label>Start:</label><input type="number" id="tcStart" autocomplete="off" style="width: 50px; text-align: center;" placeholder="1">
+                        <label>End:</label><input type="number" id="tcEnd" autocomplete="off" style="width: 50px; text-align: center;" placeholder="50">
                     </div>
-                    <button onclick="saveAdminData()" class="btn-save-data">Save Data</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="saveAdminData()" class="btn-save-data">Save Data</button>
+                        <button onclick="closeAdminModal()">Close</button>
+                    </div>
                 </div>
                 
                 <div class="saved-styles-container" id="savedStylesList"></div>
@@ -463,7 +508,7 @@
         </div>
     </div>
 
-    <!-- FIREBASE MODULE -->
+    <!-- FIREBASE MODULE (Logic 100% Intact) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -612,13 +657,13 @@
                 renderDefaultStylesList();
                 setActiveStyle(styleName);
             }
-            closeAdminModal(null);
+            closeAdminModal();
         };
 
         window.deleteStyle = async function(index, event) {
             event.stopPropagation();
             const s = window.styles[index];
-            if(!confirm(`Delete Style: ${s.styleName}? All related production rows will stay in DB but won't be accessible.`)) return;
+            if(!confirm(`Delete Style: ${s.styleName}?`)) return;
             await deleteDoc(doc(db, "styles", `${s.bookName}_${s.styleName}`));
             window.styles.splice(index, 1);
             renderDefaultStylesList();
@@ -631,7 +676,7 @@
             const sect = document.getElementById('u_section').value;
             const flor = document.getElementById('u_floor').value;
             const role = document.getElementById('u_role').value;
-            if(!name || !pass) { alert("Please enter both Username and Password!"); return; }
+            if(!name || pass === '') { alert("Please enter both Username and Password!"); return; }
 
             const user = { username: name, password: pass, section: sect, floor: flor, role: role };
             await setDoc(doc(db, "users", name.toLowerCase()), user);
@@ -704,12 +749,15 @@
         };
     </script>
 
-    <!-- UI Logic -->
+    <!-- UI Logic Scripts -->
     <script>
         function applyPermissions() {
-            let adminBtn = document.getElementById('menuAdminBtn'); let passBtn = document.getElementById('menuPasswordBtn'); 
-            if(window.currentUser.role === 'Admin') { adminBtn.style.display = 'inline-block'; passBtn.style.display = 'inline-block'; } 
-            else { adminBtn.style.display = 'none'; passBtn.style.display = 'none'; }
+            let adminBtn = document.getElementById('menuAdminBtn'); 
+            if(window.currentUser.role === 'Admin') { 
+                adminBtn.style.display = 'inline-block'; 
+            } else { 
+                adminBtn.style.display = 'none'; 
+            }
         }
 
         function showAccessDenied(message) { document.getElementById('accessDeniedMsg').innerText = message; document.getElementById('accessDeniedModal').style.display = 'flex'; }
@@ -735,11 +783,63 @@
             permittedStyles.forEach(s => { let pill = document.createElement('span'); pill.className = "highlight-pill"; if(s.styleName === window.activeStyleName) pill.classList.add("active-pill"); pill.innerText = s.styleName; pill.onclick = () => window.setActiveStyle(s.styleName); container.appendChild(pill); });
         }
 
-        function filterStyles() {
-            let q = document.getElementById('styleSearchInput').value.toLowerCase(); let dropdown = document.getElementById('styleDropdown'); dropdown.innerHTML = ""; let permittedStyles = getPermittedStyles(); let filtered = permittedStyles.filter(s => s.styleName.toLowerCase().includes(q));
-            filtered.forEach(s => { let div = document.createElement('div'); div.className = "dropdown-item"; div.innerText = s.styleName; div.onclick = (e) => { e.stopPropagation(); window.setActiveStyle(s.styleName); document.getElementById('styleSearchInput').value = ""; dropdown.style.display = 'none'; }; dropdown.appendChild(div); });
+        // --- INSTANT LIVE SEARCH WITH EXACT MATCH AUTO-SELECT ---
+        function filterStylesInstant() {
+            let q = document.getElementById('styleSearchInput').value.toLowerCase().trim(); 
+            let dropdown = document.getElementById('styleDropdown'); 
+            dropdown.innerHTML = ""; 
+            
+            if (q === "") {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            let permittedStyles = getPermittedStyles(); 
+            let filtered = permittedStyles.filter(s => s.styleName.toLowerCase().includes(q));
+            
+            // EXACT MATCH TRIGGER: Instantly selects just like Start ID jumps
+            let exactMatch = filtered.find(s => s.styleName.toLowerCase() === q);
+            if(exactMatch) {
+                window.setActiveStyle(exactMatch.styleName);
+                document.getElementById('styleSearchInput').value = "";
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            if(filtered.length > 0) {
+                dropdown.style.display = 'block';
+                filtered.forEach(s => { 
+                    let div = document.createElement('div'); 
+                    div.className = "dropdown-item"; 
+                    div.innerText = s.styleName; 
+                    div.onmousedown = (ev) => { 
+                        ev.preventDefault();
+                        ev.stopPropagation(); 
+                        window.setActiveStyle(s.styleName); 
+                        document.getElementById('styleSearchInput').value = ""; 
+                        dropdown.style.display = 'none'; 
+                    }; 
+                    dropdown.appendChild(div); 
+                });
+            } else { 
+                dropdown.style.display = 'none'; 
+            }
         }
-        function showStyleDropdown(e) { e.stopPropagation(); document.getElementById('styleDropdown').style.display = 'block'; filterStyles(); }
+
+        function handleStyleKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                let q = document.getElementById('styleSearchInput').value.toLowerCase().trim();
+                if(!q) return;
+                let permittedStyles = getPermittedStyles();
+                let filtered = permittedStyles.filter(s => s.styleName.toLowerCase().includes(q));
+                if(filtered.length > 0) {
+                    window.setActiveStyle(filtered[0].styleName);
+                    document.getElementById('styleSearchInput').value = "";
+                    document.getElementById('styleDropdown').style.display = 'none';
+                }
+            }
+        }
 
         function renderTable() {
             let tbody = document.getElementById("tableBody"); tbody.innerHTML = ""; if (!window.activeStyleName) return; 
@@ -747,23 +847,29 @@
             let filteredByStyleAndBook = window.rowsModel.filter(r => r.styleName === window.activeStyleName && r.bookName === window.currentProductionBook);
             
             let searchId = document.getElementById('searchIdInput').value; 
-            let startIndex = 0; if (searchId) { let idNum = parseInt(searchId); let foundIndex = filteredByStyleAndBook.findIndex(r => r.idNo >= idNum); if(foundIndex !== -1) startIndex = foundIndex; else startIndex = filteredByStyleAndBook.length; } 
+            let startIndex = 0; if (searchId) { let idNum = parseInt(searchId); let foundIndex = filteredByStyleAndBook.findIndex(r => r.idNo >= idNum); if(foundIndex !== -1) startIndex = foundIndex; } 
             let toShow = filteredByStyleAndBook.slice(startIndex, startIndex + 50);
 
             toShow.forEach(row => {
-                let tr = document.createElement("tr"); tr.id = 'row-' + row.idNo; if(!!row.receiveQty) tr.classList.add('locked-row');
-                let clrOpts = `<option value=""></option>` + activeStyleObj.colors.map(c => `<option value="${c}" ${row.color === c ? 'selected' : ''}>${c}</option>`).join('');
+                let tr = document.createElement("tr"); tr.id = 'row-' + row.idNo; 
+                // --- ADMIN CAN EDIT EVERYTHING, OTHERS ARE LOCKED IF RECEIVE QTY EXISTS ---
+                if(!!row.receiveQty && window.currentUser.role !== 'Admin') tr.classList.add('locked-row');
+                
                 tr.innerHTML = `
-                    <td style="padding:0;"><input type="text" class="grid-input issue-date-input" value="${row.issueDate || ''}" onchange="window.updateModel(${row.idNo}, 'issueDate', this.value)" onkeydown="handleDateKey(event, this, 'name-input', ${row.idNo}, 'issueDate')"></td>
-                    <td style="padding:0;"><input type="text" class="grid-input name-input" value="${row.workerName || ''}" oninput="handleNameInput(${row.idNo}, this, event)" onchange="window.updateModel(${row.idNo}, 'workerName', this.value)" onkeydown="handleGenericEnter(event, this, 'mobile-input')"></td>
-                    <td style="padding:0;"><input type="text" class="grid-input mobile-input" value="${row.mobileNo || ''}" onchange="window.updateModel(${row.idNo}, 'mobileNo', this.value)" onkeydown="handleGenericEnter(event, this, 'block-input')"></td>
-                    <td style="padding:0;"><input type="text" class="grid-input block-input" value="${row.blockNo || ''}" onchange="window.updateModel(${row.idNo}, 'blockNo', this.value)" onkeydown="handleGenericEnter(event, this, 'color-input')"></td>
-                    <td style="background:#F9F9F9; font-weight:bold; color:#555; font-size:11px;">${row.idNo}</td>
-                    <td style="padding:0;"><select class="grid-input color-input" onchange="window.updateModel(${row.idNo}, 'color', this.value)" onkeydown="handleGenericEnter(event, this, 'issue-qty-input')">${clrOpts}</select></td>
-                    <td style="padding:0;"><input type="text" class="grid-input issue-qty-input" value="${row.issueQty}" onchange="window.updateModel(${row.idNo}, 'issueQty', this.value)" onkeydown="handleGenericEnterToRate(event, ${row.idNo}, this)"></td>
-                    <td style="padding:0;" class="clickable-cell" onclick="openRateQtyPopup(${row.idNo}, this.querySelector('input'), event)"><input type="text" class="grid-input rate-input" readonly value="${row.rate}"></td>
-                    <td style="padding:0;" class="clickable-cell" onclick="openRateQtyPopup(${row.idNo}, this.querySelector('input'), event)"><input type="text" class="grid-input receive-qty-input" readonly value="${row.receiveQty}"></td>
-                    <td style="padding:0;"><input type="text" class="grid-input receive-date-input" value="${row.receiveDate || ''}" onchange="window.updateModel(${row.idNo}, 'receiveDate', this.value)" onkeydown="handleDateKey(event, this, 'next-row', ${row.idNo}, 'receiveDate')"></td>
+                    <td style="padding:0;"><input type="text" class="grid-input issue-date-input" autocomplete="off" value="${row.issueDate || ''}" onchange="window.updateModel(${row.idNo}, 'issueDate', this.value)" onkeydown="handleDateKey(event, this, 'name-input', ${row.idNo}, 'issueDate')"></td>
+                    <td style="padding:0;"><input type="text" class="grid-input name-input" autocomplete="off" value="${row.workerName || ''}" oninput="handleNameInput(${row.idNo}, this, event)" onchange="window.updateModel(${row.idNo}, 'workerName', this.value)" onkeydown="handleGenericEnter(event, this, 'mobile-input')"></td>
+                    <td style="padding:0;"><input type="text" class="grid-input mobile-input" autocomplete="off" value="${row.mobileNo || ''}" onchange="window.updateModel(${row.idNo}, 'mobileNo', this.value)" onkeydown="handleGenericEnter(event, this, 'block-input')"></td>
+                    <td style="padding:0;"><input type="text" class="grid-input block-input" autocomplete="off" value="${row.blockNo || ''}" onchange="window.updateModel(${row.idNo}, 'blockNo', this.value)" onkeydown="handleGenericEnter(event, this, 'color-input')"></td>
+                    <td style="background:#F9F9F9; font-weight:bold; color:#555; font-size:10px;">${row.idNo}</td>
+                    
+                    <td style="padding:0;" class="clickable-cell" onclick="openColorPopup(${row.idNo}, this.querySelector('input'), event)">
+                        <input type="text" class="grid-input color-input" autocomplete="off" readonly value="${row.color || ''}" onkeydown="handleColorKey(event, ${row.idNo}, this)">
+                    </td>
+                    
+                    <td style="padding:0;"><input type="text" class="grid-input issue-qty-input" autocomplete="off" value="${row.issueQty}" onchange="window.updateModel(${row.idNo}, 'issueQty', this.value)" onkeydown="handleGenericEnterToRate(event, ${row.idNo}, this)"></td>
+                    <td style="padding:0;" class="clickable-cell" onclick="openRateQtyPopup(${row.idNo}, this.querySelector('input'), event)"><input type="text" class="grid-input rate-input" autocomplete="off" readonly value="${row.rate}" onkeydown="handleRateKey(event, ${row.idNo}, this)"></td>
+                    <td style="padding:0;" class="clickable-cell" onclick="openRateQtyPopup(${row.idNo}, this.querySelector('input'), event)"><input type="text" class="grid-input receive-qty-input" autocomplete="off" readonly value="${row.receiveQty}"></td>
+                    <td style="padding:0;"><input type="text" class="grid-input receive-date-input" autocomplete="off" value="${row.receiveDate || ''}" onchange="window.updateModel(${row.idNo}, 'receiveDate', this.value)" onkeydown="handleDateKey(event, this, 'next-row', ${row.idNo}, 'receiveDate')"></td>
                 `; tbody.appendChild(tr);
             });
         }
@@ -779,17 +885,21 @@
             let tr = nameInputEl.closest('tr'); tr.querySelector('.name-input').value = workerObj.name; tr.querySelector('.mobile-input').value = workerObj.mobileNo; tr.querySelector('.block-input').value = workerObj.blockNo; tr.querySelector('.color-input').focus();
         }
 
-        // --- POPUP HANDLERS ---
+        // --- RATE POPUP HANDLERS (WITH VALIDATION) ---
         let activePopupRowId = null; let activeRowForPopup = null;
         function openRateQtyPopup(idNo, inputField, event) {
-            event.stopPropagation(); activePopupRowId = idNo; activeRowForPopup = inputField.closest('tr');
+            event.stopPropagation(); 
+            // --- ADMIN CAN OPEN POPUP EVEN ON LOCKED ROWS ---
+            if(inputField.closest('tr').classList.contains('locked-row')) return; 
+            
+            activePopupRowId = idNo; activeRowForPopup = inputField.closest('tr');
             let popup = document.getElementById('rateQtyPopup'); let rect = inputField.getBoundingClientRect(); let tbody = document.getElementById('popupRateTableBody'); tbody.innerHTML = '';
             let activeStyleObj = window.styles.find(s => s.styleName === window.activeStyleName && s.bookName === window.currentProductionBook) || { rates:[] };
             let rowObj = window.rowsModel.find(r => r.idNo === idNo);
             activeStyleObj.rates.forEach(r => {
                 let val = (rowObj.rate === r.name) ? (rowObj.receiveQty || '') : '';
                 let trEl = document.createElement('tr');
-                trEl.innerHTML = `<td style="padding-left:5px;">${r.name}</td><td><input type="number" class="popup-qty-input" data-ratename="${r.name}" value="${val}" onkeydown="if(event.key==='Enter') saveRateQty()"></td>`;
+                trEl.innerHTML = `<td style="padding-left:5px;">${r.name}</td><td><input type="number" class="popup-qty-input" autocomplete="off" data-ratename="${r.name}" value="${val}" onkeydown="if(event.key==='Enter') saveRateQty()"></td>`;
                 tbody.appendChild(trEl);
             });
             popup.style.display = 'flex'; popup.style.top = (rect.bottom + window.scrollY + 2) + 'px'; popup.style.left = (rect.left + window.scrollX - 180) + 'px';
@@ -797,17 +907,121 @@
         }
         function saveRateQty() {
             let inputs = document.querySelectorAll('.popup-qty-input');
-            for(let input of inputs) { if(input.value.trim() !== '') { window.updateModel(activePopupRowId, 'rate', input.getAttribute('data-ratename')); window.updateModel(activePopupRowId, 'receiveQty', input.value.trim()); break; } }
+            let rowObj = window.rowsModel.find(r => r.idNo === activePopupRowId);
+            let issueQty = parseInt(rowObj.issueQty) || 0;
+
+            for(let input of inputs) { 
+                let val = input.value.trim();
+                if(val !== '') { 
+                    let receiveQty = parseInt(val) || 0;
+                    
+                    // VALIDATION CHECK
+                    if(receiveQty > issueQty) {
+                        alert("Receive Qty cannot be greater than Issue Qty!");
+                        input.focus();
+                        return; // Abort saving
+                    }
+
+                    window.updateModel(activePopupRowId, 'rate', input.getAttribute('data-ratename')); 
+                    window.updateModel(activePopupRowId, 'receiveQty', val); 
+                    break; 
+                } 
+            }
             closeRateQtyPopup(); renderTable(); 
-            let tr = document.getElementById(`row-${activePopupRowId}`); if(tr) tr.querySelector('.receive-date-input').focus();
+            let tr = document.getElementById(`row-${activePopupRowId}`); 
+            if(tr) tr.querySelector('.receive-date-input').focus();
         }
         function deleteRateQty() { window.updateModel(activePopupRowId, 'receiveQty', ''); closeRateQtyPopup(); renderTable(); }
         function closeRateQtyPopup() { document.getElementById('rateQtyPopup').style.display = 'none'; }
+
+
+        // --- COLOR POPUP HANDLERS ---
+        let activeColorPopupRowId = null;
+        function openColorPopup(idNo, inputField, event) {
+            event.stopPropagation();
+            if(inputField.closest('tr').classList.contains('locked-row')) return;
+            
+            activeColorPopupRowId = idNo; 
+            let popup = document.getElementById('colorPopup'); 
+            let rect = inputField.getBoundingClientRect(); 
+            let tbody = document.getElementById('popupColorTableBody'); 
+            tbody.innerHTML = '';
+            
+            let activeStyleObj = window.styles.find(s => s.styleName === window.activeStyleName && s.bookName === window.currentProductionBook) || { colors:[] };
+            
+            activeStyleObj.colors.forEach((c) => {
+                let trEl = document.createElement('tr');
+                trEl.innerHTML = `<td tabindex="0" class="popup-color-item" data-color="${c}" onkeydown="handleColorItemKey(event, this)" onclick="saveColorPopup('${c}')">${c}</td>`;
+                tbody.appendChild(trEl);
+            });
+            
+            popup.style.display = 'flex'; 
+            popup.style.top = (rect.bottom + window.scrollY + 2) + 'px'; 
+            popup.style.left = (rect.left + window.scrollX) + 'px';
+            
+            setTimeout(() => {
+                let firstItem = tbody.querySelector('.popup-color-item');
+                if(firstItem) {
+                    firstItem.focus();
+                    firstItem.classList.add('active-item');
+                }
+            }, 50);
+        }
+        function handleColorItemKey(e, item) {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                saveColorPopup(item.getAttribute('data-color'));
+            } else if(e.key === 'ArrowDown') {
+                e.preventDefault();
+                item.classList.remove('active-item');
+                let next = item.parentElement.nextElementSibling?.querySelector('.popup-color-item');
+                if(next) { next.focus(); next.classList.add('active-item'); }
+                else { item.focus(); item.classList.add('active-item'); }
+            } else if(e.key === 'ArrowUp') {
+                e.preventDefault();
+                item.classList.remove('active-item');
+                let prev = item.parentElement.previousElementSibling?.querySelector('.popup-color-item');
+                if(prev) { prev.focus(); prev.classList.add('active-item'); }
+                else { item.focus(); item.classList.add('active-item'); }
+            }
+        }
+        function saveColorPopup(colorVal) {
+            if (activeColorPopupRowId !== null) {
+                window.updateModel(activeColorPopupRowId, 'color', colorVal);
+                renderTable();
+                let tr = document.getElementById(`row-${activeColorPopupRowId}`); 
+                if(tr) tr.querySelector('.issue-qty-input').focus();
+            }
+            closeColorPopup();
+        }
+        function deleteColor() {
+            if (activeColorPopupRowId !== null) {
+                window.updateModel(activeColorPopupRowId, 'color', '');
+                renderTable();
+                let tr = document.getElementById(`row-${activeColorPopupRowId}`); 
+                if(tr) tr.querySelector('.issue-qty-input').focus();
+            }
+            closeColorPopup();
+        }
+        function closeColorPopup() { document.getElementById('colorPopup').style.display = 'none'; }
+
 
         // --- CALENDAR LOGIC ---
         let currentCalDate = new Date(), selectedCalDate = null, activeDateInputIdNo = null, activeDateField = null, activeDateInputEl = null;
         function openCalendar(e, inputEl, idNo, field) {
             e.stopPropagation(); activeDateInputIdNo = idNo; activeDateField = field; activeDateInputEl = inputEl;
+            
+            // Pre-select existing date if parsed, otherwise today.
+            let d = new Date();
+            if (inputEl.value) {
+                let parts = inputEl.value.split('/');
+                if (parts.length === 3) {
+                    d = new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+            }
+            currentCalDate = new Date(d);
+            selectedCalDate = new Date(d);
+
             let picker = document.getElementById('customDatePicker'); let rect = inputEl.getBoundingClientRect();
             picker.style.display = 'flex'; picker.style.top = (rect.bottom + window.scrollY) + 'px'; picker.style.left = (rect.left + window.scrollX) + 'px';
             renderCalendar();
@@ -827,7 +1041,7 @@
                     else {
                         cell.innerText = date; let d = date;
                         cell.onclick = (ev) => { ev.stopPropagation(); selectedCalDate = new Date(y, m, d); saveCalendarDate(); };
-                        if (selectedCalDate?.getDate() === date && selectedCalDate?.getMonth() === m) cell.className = 'selected';
+                        if (selectedCalDate?.getDate() === date && selectedCalDate?.getMonth() === m && selectedCalDate?.getFullYear() === y) cell.className = 'selected';
                         date++;
                     }
                     row.appendChild(cell);
@@ -849,28 +1063,75 @@
 
         // --- KEYBOARD SEQUENCING ---
         function handleDateKey(e, input, next, idNo, field) {
-            if(e.key === '+') { e.preventDefault(); openCalendar(e, input, idNo, field); }
+            if(e.key === '+') { 
+                e.preventDefault(); 
+                openCalendar(e, input, idNo, field); 
+            }
             else if(e.key === 'Enter') {
                 e.preventDefault();
-                if(!input.value) { let d = new Date(); input.value = ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear(); }
-                window.updateModel(idNo, field, input.value);
-                if(next === 'next-row') { let tr = input.closest('tr').nextElementSibling; if(tr) tr.querySelector('.issue-date-input').focus(); }
-                else { input.closest('tr').querySelector('.'+next).focus(); }
+                let picker = document.getElementById('customDatePicker');
+                let trIdStr = input.closest('tr').id;
+                
+                if (picker.style.display === 'flex') {
+                    saveCalendarDate(); // This handles closing and triggers renderTable()
+                } else {
+                    if(!input.value) { 
+                        let d = new Date(); 
+                        input.value = ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear(); 
+                        window.updateModel(idNo, field, input.value); 
+                    }
+                }
+
+                // Since renderTable() might have recreated the rows, fetch the row again
+                let currentTr = document.getElementById(trIdStr);
+                if (currentTr) {
+                    if(next === 'next-row') { 
+                        let nextTr = currentTr.nextElementSibling; 
+                        if(nextTr) nextTr.querySelector('.issue-date-input').focus(); 
+                    } else { 
+                        let nextEl = currentTr.querySelector('.'+next);
+                        if(nextEl) nextEl.focus(); 
+                    }
+                }
             }
         }
         function handleGenericEnter(e, input, next) { if(e.key === 'Enter') { e.preventDefault(); input.closest('tr').querySelector('.'+next).focus(); } }
-        function handleGenericEnterToRate(e, idNo, input) { if(e.key === 'Enter') { e.preventDefault(); openRateQtyPopup(idNo, input, e); } }
-        function handleSearchIdEnter(e) { if(e.key === "Enter") { e.preventDefault(); let searchId = document.getElementById('searchIdInput').value; if(searchId) { let tr = document.getElementById('row-' + searchId); if(tr) tr.querySelector('.issue-date-input').focus(); } } }
+        
+        function handleColorKey(e, idNo, input) {
+            if(e.key === '+') {
+                e.preventDefault();
+                openColorPopup(idNo, input, e);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                let nextEl = input.closest('tr').querySelector('.issue-qty-input');
+                if(nextEl) nextEl.focus();
+            }
+        }
+        
+        function handleGenericEnterToRate(e, idNo, input) { 
+            if(e.key === 'Enter') { 
+                e.preventDefault(); 
+                let nextEl = input.closest('tr').querySelector('.rate-input');
+                if(nextEl) nextEl.focus();
+            } 
+        }
+        function handleRateKey(e, idNo, input) {
+            if(e.key === '+') {
+                e.preventDefault();
+                openRateQtyPopup(idNo, input, e);
+            }
+        }
+        function handleSearchIdEnter(e) { if(e.key === "Enter") { e.preventDefault(); let searchId = document.getElementById('searchIdInput').value; if(searchId) { let tr = document.getElementById('row-' + searchId); if(tr) tr.scrollIntoView({behavior: 'smooth', block: 'center'}); } } }
 
         // --- ADMIN HELPERS ---
-        function openAdminModal(e, bookName) { e.stopPropagation(); window.currentAdminBook = bookName.toUpperCase().replace(' BOOK',''); document.getElementById('adminModal').style.display = 'flex'; resetAdminModalForm(); renderSavedAdminStylesList(); }
+        function openAdminModal(e, bookName) { e.stopPropagation(); closeAllMenus(); window.currentAdminBook = bookName.toUpperCase().replace(' BOOK',''); document.getElementById('adminModal').style.display = 'flex'; resetAdminModalForm(); renderSavedAdminStylesList(); }
         function closeAdminModal() { document.getElementById('adminModal').style.display = 'none'; }
-        function addColorRow() { let div = document.createElement('div'); div.className = 'rate-item'; div.innerHTML = `<input type="text" class="modColorInput" style="flex:1;"><span class="delete-btn" onclick="this.parentElement.remove()">✖</span>`; document.getElementById('colorContainer').appendChild(div); }
-        function addRateRow() { let div = document.createElement('div'); div.className = 'rate-item'; div.innerHTML = `<input type="text" class="modRateName" style="width:80px;"><input type="text" class="modRateTk" style="width:40px;"><span class="delete-btn" onclick="this.parentElement.remove()">✖</span>`; document.getElementById('rateContainer').appendChild(div); }
+        function addColorRow() { let div = document.createElement('div'); div.className = 'rate-item'; div.innerHTML = `<input type="text" class="modColorInput" autocomplete="off" style="flex:1;"><span class="delete-btn" onclick="this.parentElement.remove()">✖</span>`; document.getElementById('colorContainer').appendChild(div); }
+        function addRateRow() { let div = document.createElement('div'); div.className = 'rate-item'; div.innerHTML = `<input type="text" class="modRateName" autocomplete="off" style="width:80px;"><input type="text" class="modRateTk" autocomplete="off" style="width:40px;"><span class="delete-btn" onclick="this.parentElement.remove()">✖</span>`; document.getElementById('rateContainer').appendChild(div); }
         function resetAdminModalForm() { 
             document.getElementById('modBuyer').value = ""; document.getElementById('modStyle').value = ""; 
-            document.getElementById('colorContainer').innerHTML = `<div class="rate-item"><input type="text" class="modColorInput" style="flex:1;"></div>`;
-            document.getElementById('rateContainer').innerHTML = `<div class="rate-item"><input type="text" class="modRateName" style="width:80px;"><input type="text" class="modRateTk" style="width:40px;"></div>`;
+            document.getElementById('colorContainer').innerHTML = `<div class="rate-item"><input type="text" class="modColorInput" autocomplete="off" style="flex:1;"></div>`;
+            document.getElementById('rateContainer').innerHTML = `<div class="rate-item"><input type="text" class="modRateName" autocomplete="off" style="width:80px;"><input type="text" class="modRateTk" autocomplete="off" style="width:40px;"></div>`;
         }
         function renderSavedAdminStylesList() {
             let container = document.getElementById('savedStylesList'); container.innerHTML = "";
@@ -882,7 +1143,7 @@
         }
 
         // --- PASSWORD MANAGEMENT ---
-        function openPasswordDashboard() { document.getElementById('workspace-area').style.display = 'flex'; switchTab('Password'); }
+        function openPasswordDashboard(e) { if(e) e.stopPropagation(); closeAllMenus(); document.getElementById('workspace-area').style.display = 'flex'; switchTab('Password'); }
         function renderUsersTable() {
             const tbody = document.getElementById('userTableBody'); tbody.innerHTML = '';
             window.usersModel.forEach((u, i) => {
@@ -892,7 +1153,7 @@
             });
         }
 
-        // --- REPORT GENERATION (COMPACT AUTO-WIDTH DESIGN) ---
+        // --- REPORT GENERATION (MATCHING THE 4 SCREENSHOTS PERFECTLY) ---
         function generateReport() {
             let type = document.getElementById('repSelectInput').value; 
             let dFromStr = document.getElementById('repStartDate').value; 
@@ -925,6 +1186,7 @@
             let theadHtml = ''; 
             let tbodyHtml = '';
 
+            // Report 4 (Top Sheet)
             if (type === '4_Top_Sheet') {
                 title = "Production Top Sheet";
                 theadHtml = `<tr>
@@ -954,32 +1216,41 @@
                 });
                 tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">GRAND TOTAL</td><td>${tQ}</td><td></td><td>${tA.toFixed(0)}</td></tr>`;
             } 
+            // Report 3 (All Employee Production Summery - 3 Tiers)
             else if (type === '3_StyleWise_Reports') {
                 title = "All Employee Production Summery";
                 let empMap = {};
+                let uniqueStyles = [];
                 rawData.forEach(r => {
                     let key = r.workerName;
                     if(!empMap[key]) empMap[key] = { name: r.workerName, mobile: r.mobileNo, block: r.blockNo, styles: {} };
                     let sKey = `${r.styleName}_${r.rate}`;
-                    if(!empMap[key].styles[sKey]) empMap[key].styles[sKey] = { name: r.styleName, rate: r.rate, q: 0 };
+                    if(!empMap[key].styles[sKey]) empMap[key].styles[sKey] = { q: 0 };
                     empMap[key].styles[sKey].q += (parseInt(r.receiveQty) || 0);
+
+                    if(!uniqueStyles.find(x => x.key === sKey)) {
+                        let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
+                        uniqueStyles.push({ key: sKey, buyer: sObj ? sObj.buyer : 'Unknown', name: r.styleName, rate: r.rate });
+                    }
                 });
-                let uniqueStyles = [];
-                rawData.forEach(r => {
-                    let sKey = `${r.styleName}_${r.rate}`;
-                    if(!uniqueStyles.find(x => x.key === sKey)) uniqueStyles.push({ key: sKey, name: r.styleName, rate: r.rate });
-                });
-                theadHtml = `<tr>
-                    <th rowspan="2" style="width:30px;">SL</th>
-                    <th rowspan="2" style="width:140px;">NAME</th>
-                    <th rowspan="2" style="width:100px;">MOBILE NUMBER</th>
-                    <th rowspan="2" style="width:50px;">BLOCK</th>
-                    ${uniqueStyles.map(s => `<th style="border-bottom:none;">${s.name}</th>`).join('')}
-                    <th rowspan="2" style="width:60px;">Tot Prod</th>
-                    <th rowspan="2" style="width:100px;">REMARKS</th>
-                </tr><tr>
-                    ${uniqueStyles.map(s => `<th style="border-top:none; font-size:9px;">${s.rate}</th>`).join('')}
+                
+                theadHtml = `
+                <tr>
+                    <th rowspan="3">SL</th>
+                    <th rowspan="3">NAME</th>
+                    <th rowspan="3">MOBILE NUMBER</th>
+                    <th rowspan="3">BLOCK</th>
+                    ${uniqueStyles.map(s => `<th>${s.buyer}</th>`).join('')}
+                    <th rowspan="3">Tot Prod</th>
+                    <th rowspan="3">Remarks</th>
+                </tr>
+                <tr>
+                    ${uniqueStyles.map(s => `<th>${s.name}</th>`).join('')}
+                </tr>
+                <tr>
+                    ${uniqueStyles.map(s => `<th>${s.rate}</th>`).join('')}
                 </tr>`;
+                
                 let sl = 1, gTotal = 0;
                 Object.values(empMap).forEach(emp => {
                     let rowT = 0;
@@ -989,44 +1260,54 @@
                 });
                 tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">TOTAL</td>${uniqueStyles.map(() => `<td></td>`).join('')}<td>${gTotal}</td><td></td></tr>`;
             }
+            // Report 1 & 2 (Operator Wise Production Report - 2 Tiers grouped by Style)
             else {
                 let isAmt = (type === '2_OpWiseProdDetail_Block_Amount');
-                title = isAmt ? "Operator Wise Production Report" : "Operator Wise Production Report";
+                title = "Operator Wise Production Report";
                 let empMap = {};
+                let uniqueStyles = [];
+                
                 rawData.forEach(r => {
                     let key = r.workerName;
                     if(!empMap[key]) empMap[key] = { name: r.workerName, mobile: r.mobileNo, block: r.blockNo, styles: {} };
-                    let sKey = `${r.styleName}_${r.rate}`;
+                    
+                    let sKey = r.styleName; 
                     if(!empMap[key].styles[sKey]) {
-                        let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
-                        let rtObj = sObj ? sObj.rates.find(rt => rt.name === r.rate) : null;
-                        empMap[key].styles[sKey] = { name: r.styleName, rate: r.rate, q: 0, tk: rtObj ? parseFloat(rtObj.tk) || 0 : 0 };
+                        empMap[key].styles[sKey] = { q: 0, amt: 0 };
                     }
+                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
+                    let rtObj = sObj ? sObj.rates.find(rt => rt.name === r.rate) : null;
+                    let tk = rtObj ? parseFloat(rtObj.tk) || 0 : 0;
+                    
                     empMap[key].styles[sKey].q += (parseInt(r.receiveQty) || 0);
+                    empMap[key].styles[sKey].amt += ((parseInt(r.receiveQty) || 0) * tk);
+
+                    if(!uniqueStyles.find(x => x.key === sKey)) {
+                        uniqueStyles.push({ key: sKey, buyer: sObj ? sObj.buyer : 'Unknown', name: r.styleName });
+                    }
                 });
-                let uniqueStyles = [];
-                rawData.forEach(r => {
-                    let sKey = `${r.styleName}_${r.rate}`;
-                    if(!uniqueStyles.find(x => x.key === sKey)) uniqueStyles.push({ key: sKey, name: r.styleName, rate: r.rate });
-                });
-                theadHtml = `<tr>
-                    <th rowspan="2" style="width:30px;">SL</th>
-                    <th rowspan="2" style="width:140px;">NAME</th>
-                    <th rowspan="2" style="width:100px;">MOBILE NUMBER</th>
-                    <th rowspan="2" style="width:50px;">BLOCK</th>
-                    ${uniqueStyles.map(s => `<th style="border-bottom:none;">${s.name}</th>`).join('')}
-                    <th rowspan="2" style="width:60px;">TOTAL</th>
-                    ${isAmt ? `<th rowspan="2" style="width:60px;">AMOUNT</th>` : ''}
-                    <th rowspan="2" style="width:80px;">REMARKS</th>
-                </tr><tr>
-                    ${uniqueStyles.map(s => `<th style="border-top:none; font-size:9px;">${s.rate}</th>`).join('')}
+
+                theadHtml = `
+                <tr>
+                    <th rowspan="2">SL</th>
+                    <th rowspan="2">NAME</th>
+                    <th rowspan="2">MOBILE NUMBER</th>
+                    <th rowspan="2">BLOCK</th>
+                    ${uniqueStyles.map(s => `<th>${s.buyer}</th>`).join('')}
+                    <th rowspan="2">TOTAL</th>
+                    ${isAmt ? `<th rowspan="2">AMOUNT</th>` : ''}
+                    <th rowspan="2">REMARKS</th>
+                </tr>
+                <tr>
+                    ${uniqueStyles.map(s => `<th>${s.name}</th>`).join('')}
                 </tr>`;
+
                 let sl = 1, gQ = 0, gA = 0;
                 Object.values(empMap).forEach(emp => {
                     let rQ = 0, rA = 0;
                     let cells = uniqueStyles.map(s => {
                         let d = emp.styles[s.key];
-                        if(d) { rQ += d.q; rA += (d.q * d.tk); return `<td>${d.q}</td>`; }
+                        if(d) { rQ += d.q; rA += d.amt; return `<td>${d.q}</td>`; }
                         return `<td></td>`;
                     }).join('');
                     tbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left; padding-left:5px;">${emp.name}</td><td>${emp.mobile}</td><td>${emp.block}</td>${cells}<td style="font-weight:bold;">${rQ}</td>${isAmt ? `<td style="font-weight:bold;">${rA.toFixed(0)}</td>` : ''}<td></td></tr>`;
@@ -1035,26 +1316,39 @@
                 tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">TOTAL</td>${uniqueStyles.map(() => `<td></td>`).join('')}<td>${gQ}</td>${isAmt ? `<td>${gA.toFixed(0)}</td>` : ''}<td></td></tr>`;
             }
 
-            let html = `<html><head><title>Matrix Production Report</title><style>
-                body { font-family: 'Tahoma', sans-serif; padding: 40px; color: #000; background: #fff; text-align: center; }
-                .btn-print { position: fixed; top: 20px; right: 20px; background: #0078D7; color: white; border: none; padding: 8px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-                .header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
-                .header h3 { margin: 4px 0; font-size: 13px; font-weight: bold; }
-                .header p { margin: 2px 0; font-size: 10px; font-weight: bold; }
-                .table-wrapper { display: flex; justify-content: center; width: 100%; margin-top: 20px; }
-                .report-table { border-collapse: collapse; width: auto; min-width: 500px; }
-                .report-table th, .report-table td { border: 1px solid #000; padding: 4px 6px; font-size: 10px; text-align: center; }
+            // Exactly styled output mimicking the images (Centered, Shrink-to-fit Table width)
+            let html = `<html><head><title>Matrix Report</title><style>
+                body { font-family: 'Arial', 'Tahoma', sans-serif; padding: 20px; color: #000; background: #fff; font-size: 11px; margin: 0; }
+                .header-section { display: flex; justify-content: space-between; align-items: flex-start; max-width: 1000px; margin: 0 auto 20px auto; }
+                .header-center { flex-grow: 1; text-align: center; }
+                .header-center h2 { margin: 0; font-size: 18px; }
+                .header-center h3 { margin: 4px 0; font-size: 14px; font-weight: bold; }
+                .header-center p { margin: 2px 0; font-size: 11px; font-weight: bold; }
+                .btn-print { background: #0078D7; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 12px; }
+                .btn-print:hover { background: #005A9E; }
+                .table-container { display: flex; justify-content: center; width: 100%; overflow-x: auto; }
+                .report-table { border-collapse: collapse; width: max-content; background: #fff; margin: 0 auto; }
+                .report-table th, .report-table td { border: 1px solid #000; padding: 5px 15px; font-size: 11px; text-align: center; white-space: nowrap; }
                 .report-table th { background: #E1E1E1; font-weight: bold; }
-                @media print { .btn-print { display: none; } body { padding: 10px; } }
+                @media print { 
+                    .btn-print { display: none !important; } 
+                    body { padding: 0; }
+                    .header-section { max-width: 100%; margin-bottom: 10px; }
+                }
             </style></head><body>
-                <button class="btn-print" onclick="window.print()">Print Report</button>
-                <div class="header">
-                    <h2>Matrix Sweaters Limited</h2>
-                    <h3>${title}</h3>
-                    <p>Floor : ${floorInput} &nbsp;&nbsp; Section: ${window.currentProductionBook}</p>
-                    <p>Date Range: ${dFromStr} to ${dToStr}</p>
+                <div class="header-section">
+                    <div style="width: 120px;"></div>
+                    <div class="header-center">
+                        <h2>Matrix Sweaters Limited</h2>
+                        <h3>${title}</h3>
+                        <p>Floor : ${floorInput} &nbsp;&nbsp; Section: ${window.currentProductionBook}</p>
+                        <p>Date Range: ${dFromStr} to ${dToStr}</p>
+                    </div>
+                    <div style="width: 120px; display: flex; justify-content: flex-end;">
+                        <button class="btn-print" onclick="window.print()">🖨️ Print Report</button>
+                    </div>
                 </div>
-                <div class="table-wrapper">
+                <div class="table-container">
                     <table class="report-table">
                         <thead>${theadHtml}</thead>
                         <tbody>${tbodyHtml}</tbody>
