@@ -52,7 +52,8 @@
         .sub-submenu-content .dropdown-item:hover { background-color: #91C9F7; outline: 1px solid #3399FF; }
 
         /* Main Area */
-        .main-container { padding: 8px; flex-grow: 1; display: flex; flex-direction: column; background: #F0F0F0; overflow: hidden; }
+        .main-container { flex-grow: 1; display: flex; flex-direction: column; background: #F0F0F0; overflow: hidden; }
+        #workspace-area { padding: 8px; flex-direction: column; flex-grow: 1; background: #F0F0F0; overflow: hidden; }
 
         /* Input Controls */
         input[type="text"], input[type="password"], input[type="number"], select { 
@@ -73,6 +74,19 @@
             border: 1px solid #398439; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: 0.2s;
         }
         .btn-save-data:hover { background: linear-gradient(135deg, #449d44, #398439); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+
+        /* FAST Button Shake Animation */
+        @keyframes btnVibrate {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-2px) rotate(-1deg); }
+            50% { transform: translateX(2px) rotate(1deg); }
+            75% { transform: translateX(-2px) rotate(-1deg); }
+            100% { transform: translateX(0); }
+        }
+        .btn-shake {
+            animation: btnVibrate 0.1s ease-in-out !important; /* 100ms lightning fast */
+            pointer-events: none !important;
+        }
 
         /* Header Information Section */
         .info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
@@ -175,6 +189,14 @@
         .calendar-actions { display: flex; justify-content: space-between; gap: 5px; margin-top: 5px; background: #D4D0C8; padding: 5px; }
         .calendar-actions button { height: 22px; font-size: 11px; background: #E1E1E1; border: 1px solid #ADADAD; cursor: pointer; }
         .calendar-actions button:hover { border-color: #0078D7; background: #E5F1FB; }
+
+        /* Code Vault Specific CSS */
+        .code-list-item { padding: 8px 10px; border-bottom: 1px solid #E0E0E0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #FFF; transition: 0.2s; }
+        .code-list-item:hover { background: #CCE8FF; }
+        .code-list-item.active { background: #0078D7; color: white; }
+        .code-list-item.active .delete-icon { color: #FFAAAA !important; }
+        .code-textarea { flex-grow: 1; width: 100%; border: 1px solid #A0A0A0; padding: 10px; font-family: Consolas, monospace; font-size: 12px; resize: none; outline: none; white-space: pre; overflow-wrap: normal; overflow-x: auto; }
+        .code-textarea:focus { border-color: #0078D7; box-shadow: inset 0 0 3px rgba(0,120,215,0.3); }
     </style>
 </head>
 <body onclick="closeAllMenus(); closeRateQtyPopup(); closeColorPopup(); closeCalendar(false);" onload="initApp()">
@@ -206,10 +228,10 @@
                 </div>
                 <div class="login-row">
                     <label>Password:</label>
-                    <input type="password" id="loginPassword" autocomplete="off" placeholder="Enter password" onkeydown="if(event.key==='Enter') performLogin()">
+                    <input type="password" id="loginPassword" autocomplete="off" placeholder="Enter password" onkeydown="if(event.key==='Enter') performLogin(event)">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-                    <button onclick="performLogin()" style="width: 80px; font-weight: bold;">Login</button>
+                    <button onclick="window.performLogin(event)" style="width: 80px; font-weight: bold;">Login</button>
                     <button onclick="document.getElementById('loginUsername').value=''; document.getElementById('loginPassword').value='';" style="width: 80px;">Cancel</button>
                 </div>
                 <div id="loginError" style="color: red; font-size: 10px; text-align: center; display: none;">Invalid username or password!</div>
@@ -228,8 +250,8 @@
         <div class="menu-item" onclick="goHome()"><span>Home</span></div>
         <div class="menu-item"><span>Salary Information</span></div>
         
-        <!-- Updated Admin Menu Restructure -->
-        <div class="menu-item" id="menuAdminBtn" onclick="toggleMenu('adminMenu', this, event)">
+        <!-- Updated Admin Menu -->
+        <div class="menu-item" id="menuAdminBtn" onclick="if(window.currentUser && window.currentUser.role !== 'Admin') { showAccessDenied('Access Denied! Only Admin can access this menu.'); return; } toggleMenu('adminMenu', this, event)">
             <span>Admin</span>
             <div class="dropdown" id="adminMenu">
                 <!-- Create Style with Submenu -->
@@ -262,6 +284,7 @@
                                 <!-- Populated by JS -->
                             </div>
                         </div>
+                        <div class="dropdown-item" onclick="openDeleteDateModal(event)">Date</div>
                     </div>
                 </div>
 
@@ -270,7 +293,11 @@
             </div>
         </div>
         
-        <div class="menu-item"><span>Report</span></div>
+        <!-- NEW GLOBAL REPORT MENU -->
+        <div class="menu-item" onclick="if(window.currentUser && window.currentUser.role !== 'Admin') { showAccessDenied('Access Denied! Only Admin can access Global Reports.'); return; } window.openGlobalReport(event)"><span>Report</span></div>
+        
+        <!-- NEW CODE VAULT MENU -->
+        <div class="menu-item" onclick="if(window.currentUser && window.currentUser.role !== 'Admin') { showAccessDenied('Access Denied! Only Admin can access this menu.'); return; } window.openCodeVault(event)"><span>Code</span></div>
         
         <div class="menu-item" onclick="toggleMenu('productionMenu', this, event)">
             <span>Production</span>
@@ -288,15 +315,24 @@
 
     <!-- Main Application Area -->
     <div class="main-container">
+
+        <!-- HOME SCREEN -->
+        <div id="home-screen" style="display: none; flex-direction: column; justify-content: space-between; align-items: center; flex-grow: 1; background: linear-gradient(135deg, #f6f8fb 0%, #e5ebf4 100%); position: relative;">
+            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+                <h1 style="font-size: 85px; font-weight: 900; color: rgba(20, 50, 90, 0.04); margin: 0; letter-spacing: 12px; font-family: 'Arial Black', Impact, sans-serif; text-shadow: 2px 2px 4px rgba(255,255,255,0.9), -1px -1px 2px rgba(0,0,0,0.1); text-align: center; line-height: 1.1; user-select: none;">CASH PAYMENT</h1>
+                <h2 style="font-size: 38px; color: rgba(20, 50, 90, 0.04); margin: 0; font-weight: bold; letter-spacing: 6px; text-shadow: 2px 2px 4px rgba(255,255,255,0.9), -1px -1px 2px rgba(0,0,0,0.1); text-align: center; user-select: none;">Matrix Sweaters Limited</h2>
+            </div>
+            <div style="padding-bottom: 20px;">
+                <p style="font-size: 11px; color: #666; font-weight: bold; letter-spacing: 1px; margin: 0; text-transform: uppercase;">Software Developed by <span style="color: #1e395b; font-weight: 900;">ARIFUL ISLAM ARIF</span></p>
+            </div>
+        </div>
         
         <!-- WORKSPACE AREA -->
-        <div id="workspace-area" style="display: none; flex-direction: column; flex-grow: 1;">
+        <div id="workspace-area" style="display: none;">
             
-            <!-- PRODUCTION SPECIFIC HEADERS (Will be hidden on Password Dashboard) -->
             <div class="info-row" id="infoRowSearch" style="margin-top: 5px; z-index: 100;">
                 <label style="width: 35px; font-weight: bold;">Search:</label>
                 <div style="position: relative; display: inline-block;">
-                    <!-- COMPLETELY DISABLED BROWSER HISTORY AUTOFILL -->
                     <input type="text" id="styleSearchInput" name="disable_history_1" autocomplete="nope" spellcheck="false" value="" placeholder="Search styles..." style="width: 140px; background: #FFF;" oninput="filterStylesInstant()" onkeydown="handleStyleKey(event)">
                 </div>
             </div>
@@ -317,14 +353,13 @@
                 <div style="display: flex; gap: 20px; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 5px;">
                         <label style="font-weight: bold; color: #1e395b;">Id No:</label>
-                        <!-- COMPLETELY DISABLED BROWSER HISTORY AUTOFILL -->
                         <input type="number" id="searchIdInput" name="disable_history_2" autocomplete="nope" placeholder="Start ID" style="width: 70px;" oninput="renderTable()" onkeydown="handleSearchIdEnter(event)">
-                        <span style="color: #666;">(Type ID & press Enter to jump)</span>
+                        <span style="color: #666; font-weight: bold;" id="idRangeDisplay">(1-50)</span>
                     </div>
                 </div>
             </div>
 
-            <!-- TABS HEADER (Hidden on Password Dashboard) -->
+            <!-- TABS HEADER -->
             <div class="tabs" id="tabsHeaderContainer">
                 <div class="tab active" id="tab-btn-book" onclick="switchTab('Book')">Book</div>
                 <div class="tab" id="tab-btn-reports" onclick="switchTab('Reports')">Reports</div>
@@ -332,7 +367,7 @@
 
             <!-- TAB 1: Data Grid -->
             <div id="tab-book" class="tab-content" style="display: flex;">
-                <div class="grid-container" id="mainGridContainer">
+                <div class="grid-container" id="mainGridContainer" style="margin-bottom: 24px;">
                     <table id="dataTable">
                         <thead>
                             <tr>
@@ -347,7 +382,7 @@
                 </div>
             </div>
 
-            <!-- TAB 2: Reports Tab -->
+            <!-- TAB 2: Reports Tab (Specific to current Book) -->
             <div id="tab-reports" class="tab-content" style="display: none; background: #F0F0F0; border: 1px solid #A0A0A0; border-top: none; padding: 15px; overflow-y: auto;">
                 <fieldset style="border: 1px solid #C0C0C0; padding: 15px 20px; width: fit-content; border-radius: 2px;">
                     <legend style="color: #000; font-size: 11px; padding: 0 5px;">Production Detail Reports</legend>
@@ -374,8 +409,56 @@
                             <option value="3_OpWiseProdDetail_Block_Amount">3. Operator wise production detail (Amount)</option>
                             <option value="4_Top_Sheet">4. Top Sheet</option>
                             <option value="5_ColourWise_Report">5. ColourWise Report</option>
+                            <option value="6_OpWiseIssueDetails">6. Operator Wise Issue Details</option>
                         </select>
-                        <button style="width: 65px; margin-top: 2px;" onclick="generateReport()">Show</button>
+                        <button style="width: 65px; margin-top: 2px;" onclick="window.generateReport(event)">Show</button>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- NEW TAB: GLOBAL REPORT DASHBOARD -->
+            <div id="tab-global-reports" class="tab-content" style="display: none; background: #F0F0F0; border-top: 1px solid #A0A0A0; padding: 15px; overflow-y: auto;">
+                <fieldset style="border: 1px solid #C0C0C0; padding: 15px 20px; width: fit-content; border-radius: 2px;">
+                    <legend style="color: #000; font-size: 11px; padding: 0 5px;">Global Production Reports</legend>
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="text" id="gRepStartDate" autocomplete="nope" spellcheck="false" style="width: 85px; text-align: center;" onclick="openCalendar(event, this, 0, 'gRepStartDate')">
+                            <span>To</span>
+                            <input type="text" id="gRepEndDate" autocomplete="nope" spellcheck="false" style="width: 85px; text-align: center;" onclick="openCalendar(event, this, 0, 'gRepEndDate')">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 40px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <label style="width: 45px;">Section:</label>
+                            <select id="gRepSection" style="width: 100px;">
+                                <option value="All">All Sections</option>
+                                <option value="LINKING">Linking</option>
+                                <option value="TRIMMING">Trimming</option>
+                                <option value="MENDING">Mending</option>
+                                <option value="SEWING">Sewing</option>
+                                <option value="OVERLOCK">Overlock</option>
+                                <option value="IRON">Iron</option>
+                                <option value="PACKING">Packing</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <label style="width: 40px;">Floor:</label><input type="text" id="gRepFloor" autocomplete="nope" spellcheck="false" value="" placeholder="All" style="width: 80px;"> 
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <label style="width: 40px;">Block:</label><input type="text" id="gRepBlock" autocomplete="nope" spellcheck="false" value="" placeholder="All" style="width: 80px;">
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label>Report Name:</label>
+                        <select id="gRepSelectInput" style="width: 320px;">
+                            <option value="1_StyleWise_Reports">1. All Employee Production Summery</option>
+                            <option value="2_OpWiseProdDetail_Block">2. Operator wise production detail</option>
+                            <option value="3_OpWiseProdDetail_Block_Amount">3. Operator wise production detail (Amount)</option>
+                            <option value="4_Top_Sheet">4. Top Sheet</option>
+                            <option value="5_ColourWise_Report">5. ColourWise Report</option>
+                            <option value="6_OpWiseIssueDetails">6. Operator Wise Issue Details</option>
+                        </select>
+                        <button style="width: 65px; margin-top: 2px;" onclick="window.generateGlobalReport(event)">Show</button>
                     </div>
                 </fieldset>
             </div>
@@ -391,7 +474,7 @@
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <label>Password</label>
-                            <input type="password" id="u_pass" autocomplete="nope" style="width: 140px;" placeholder="Password" required>
+                            <input type="text" id="u_pass" autocomplete="nope" style="width: 140px;" placeholder="Password" required>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <label>Section</label>
@@ -410,7 +493,7 @@
                             <label>Role</label><select id="u_role" style="width: 100px;"><option value="User">User</option><option value="Admin">Admin</option></select>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <button id="btn_add_user" onclick="addPasswordUser()" style="width: 90px; height: 23px; cursor: pointer; background-color: #C1EB7B; font-weight: bold;">Add User</button>
+                            <button id="btn_add_user" onclick="window.addPasswordUser(event)" style="width: 100px; height: 24px; cursor: pointer; background: #C1EB7B; border: 1px solid #8BBF36; border-radius: 2px; font-weight: bold; color: #000;">Add User</button>
                             <span id="btn_cancel_edit" style="display:none; color:red; cursor:pointer; font-size:11px; font-weight:bold; padding: 0 5px;" onclick="cancelEdit()">Cancel</span>
                         </div>
                     </div>
@@ -427,11 +510,30 @@
                     </table>
                 </div>
             </div>
+
+            <!-- CODE VAULT TAB -->
+            <div id="tab-code-vault" class="tab-content" style="display: none; background: #F0F0F0; border-top: 1px solid #A0A0A0; padding: 10px; overflow: hidden; flex-direction: row; gap: 10px;">
+                <div style="width: 250px; background: #FFF; border: 1px solid #A0A0A0; display: flex; flex-direction: column;">
+                    <div style="background: #E0E0E0; font-weight: bold; padding: 6px; border-bottom: 1px solid #A0A0A0; text-align: center;">Saved Notes & Code</div>
+                    <div id="codeNotesListContainer" style="flex-grow: 1; overflow-y: auto;"></div>
+                </div>
+                <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="codeTitle" placeholder="Enter Note Title..." style="flex-grow: 1; font-size: 12px; font-weight: bold; padding: 4px;">
+                        <button onclick="window.saveCodeNote(event)" style="background: linear-gradient(135deg, #5cb85c, #449d44); color: white; border: 1px solid #398439; font-weight: bold; width: 100px;">Save Note</button>
+                        <button onclick="window.clearCodeForm(event)" style="width: 80px;">New Note</button>
+                        <button onclick="window.copyCodeContent(event)" style="background: #0078D7; color: white; border: 1px solid #005A9E; font-weight: bold; width: 90px;">Copy Code</button>
+                    </div>
+                    <textarea id="codeContent" class="code-textarea" placeholder="Paste your code or text here..." spellcheck="false"></textarea>
+                </div>
+            </div>
+
         </div>
     </div>
     
     <div class="status-bar">
-        <div class="status-item">Server: Online (Firebase)</div>
+        <!-- Exact IP Display Feature applied here -->
+        <div class="status-item" id="statusServer">Server: Fetching...</div>
         <div class="status-item text-red" id="statusUser">User: --</div>
         <div class="status-item text-red" id="statusSection">Section: --</div>
         <div class="status-item text-red" id="statusFloor">Floor: --</div>
@@ -448,8 +550,8 @@
             <tbody id="popupRateTableBody"></tbody>
         </table>
         <div class="popup-buttons">
-            <button onclick="deleteRateQty()">Delete</button>
-            <div style="display:flex; gap:6px;"><button onclick="saveRateQty()">OK</button><button onclick="closeRateQtyPopup()">Cancel</button></div>
+            <button onclick="window.deleteRateQty(event)">Delete</button>
+            <div style="display:flex; gap:6px;"><button onclick="window.saveRateQty(event)">OK</button><button onclick="closeRateQtyPopup()">Cancel</button></div>
         </div>
     </div>
 
@@ -460,14 +562,14 @@
             <tbody id="popupColorTableBody"></tbody>
         </table>
         <div class="popup-buttons" style="justify-content: space-between;">
-            <button onclick="deleteColor()">Clear</button>
+            <button onclick="window.deleteColor(event)">Clear</button>
             <button onclick="closeColorPopup()">Cancel</button>
         </div>
     </div>
 
     <div id="nameDropdown" class="name-autocomplete" onclick="event.stopPropagation()"></div>
 
-    <!-- Add Style Data Modal (Updated as per Image exactly) -->
+    <!-- Add Style Data Modal -->
     <div class="modal-overlay" id="adminModal" onclick="closeAdminModal(event)">
         <div class="modal-window" style="width: 500px;" onclick="event.stopPropagation()">
             <div class="window-title-bar">
@@ -510,7 +612,7 @@
                         <label style="margin-left: 5px;">Start:</label><input type="number" id="tcStart" autocomplete="nope" style="width: 50px; text-align: center;" value="1">
                         <label>End:</label><input type="number" id="tcEnd" autocomplete="nope" style="width: 50px; text-align: center;" value="50">
                     </div>
-                    <button onclick="saveAdminData()" class="btn-save-data">Save Data</button>
+                    <button id="btnSaveAdminData" onclick="window.saveAdminData(event)" class="btn-save-data">Save Data</button>
                 </div>
                 
                 <div class="saved-styles-container" id="savedStylesList" style="margin-top: 15px; max-height: 110px; padding: 10px; background: #FFF; border: 1px solid #A0A0A0; overflow-y: auto;"></div>
@@ -534,8 +636,31 @@
                     <input type="number" id="delEndId" style="width: 50px; text-align: center;">
                 </div>
                 <div style="display: flex; justify-content: center; gap: 10px;">
-                    <button onclick="window.executeDeleteRows()" style="background: linear-gradient(135deg, #d9534f, #c9302c); color: white; border: 1px solid #ac2925; border-radius: 4px; padding: 4px 15px; font-weight: bold; cursor: pointer;">Clear Rows</button>
+                    <button onclick="window.executeDeleteRows(event)" style="background: linear-gradient(135deg, #d9534f, #c9302c); color: white; border: 1px solid #ac2925; border-radius: 4px; padding: 4px 15px; font-weight: bold; cursor: pointer;">Clear Rows</button>
                     <button onclick="closeDeleteRowModal()" style="padding: 4px 15px; cursor: pointer;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Date Modal -->
+    <div class="modal-overlay" id="deleteDateModal" onclick="closeDeleteDateModal(event)">
+        <div class="modal-window" style="width: 340px;" onclick="event.stopPropagation()">
+            <div class="window-title-bar">
+                <div class="title" style="font-size: 13px;">Clear Rows by Date</div>
+                <button onclick="closeDeleteDateModal()" style="height: 18px; width: 22px; padding: 0; font-weight: bold; font-family: Tahoma; font-size: 11px; cursor: pointer; color: black; background:#D4D0C8; border:1px solid #FFF; border-bottom-color:#888; border-right-color:#888;">X</button>
+            </div>
+            <div class="modal-content" style="padding: 15px 20px;">
+                <div class="modal-row"><label>Book:</label><select id="delDateBook" style="flex:1;" onchange="populateDelDateStyles()"></select></div>
+                <div class="modal-row"><label>Style:</label><select id="delDateStyle" style="flex:1;"></select></div>
+                <div class="modal-row"><label>Date:</label><input type="text" id="delDateInput" autocomplete="nope" spellcheck="false" style="flex:1; text-align:center;" onclick="openCalendar(event, this, 0, 'delDateInput')" placeholder="Select Target Date"></div>
+                <div class="modal-row"><label>Floor:</label><select id="delDateFloor" style="flex:1;">
+                    <option value="All">All Floors</option><option value="2nd">2nd Floor</option><option value="3rd">3rd Floor</option><option value="4th">4th Floor</option><option value="5th">5th Floor</option><option value="6th">6th Floor</option>
+                </select></div>
+                
+                <div style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+                    <button onclick="window.executeDeleteByDate(event)" style="background: linear-gradient(135deg, #d9534f, #c9302c); color: white; border: 1px solid #ac2925; border-radius: 4px; padding: 4px 15px; font-weight: bold; cursor: pointer;">Clear Rows</button>
+                    <button onclick="closeDeleteDateModal()" style="padding: 4px 15px; cursor: pointer;">Cancel</button>
                 </div>
             </div>
         </div>
@@ -555,8 +680,8 @@
             </div>
         </div>
         <div class="calendar-actions">
-            <button style="width:25px;" onclick="clearCalendarDate()">X</button>
-            <button style="width:50px;" onclick="saveCalendarDate()">OK</button>
+            <button style="width:25px;" onclick="window.clearCalendarDate(event)">X</button>
+            <button style="width:50px;" onclick="window.saveCalendarDate(event)">OK</button>
             <button style="flex:1;" onclick="closeCalendar(true)">CANCEL</button>
         </div>
     </div>
@@ -584,6 +709,8 @@
         window.styles = [];
         window.rowsModel = [];
         window.workers = [];
+        window.codeNotes = [];
+        window.currentEditingCodeId = null;
         window.currentUser = null;
         window.activeStyleName = "";
         window.currentProductionBook = "";
@@ -591,8 +718,20 @@
         window.currentEditingStyleIndex = -1;
         window.editingUser = null; // User Edit Tracking
 
+        // Helper for shaking removal buttons cleanly
+        window.shakeAndRemove = function(element) {
+            element.classList.add('btn-shake');
+            setTimeout(() => { if(element.parentElement) element.parentElement.remove(); }, 100);
+        };
+
         // --- Database Sync Functions ---
         window.initApp = async function() {
+            // Fetch live IP instantly and update status bar to 'Server: 192.x.x.x'
+            fetch('https://api.ipify.org?format=json')
+                .then(r => r.json())
+                .then(d => { document.getElementById('statusServer').innerText = `Server: ${d.ip}`; })
+                .catch(() => { document.getElementById('statusServer').innerText = `Server: Offline`; });
+
             const userSnap = await getDocs(collection(db, "users"));
             window.usersModel = userSnap.docs.map(d => d.data());
             if(window.usersModel.length === 0) {
@@ -608,10 +747,19 @@
             const workerSnap = await getDocs(collection(db, "workers"));
             window.workers = workerSnap.docs.map(d => d.data());
 
+            try {
+                const codeSnap = await getDocs(collection(db, "codenotes"));
+                window.codeNotes = codeSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            } catch(e) {}
+
             let today = new Date();
             let dmyToday = ("0" + today.getDate()).slice(-2) + "/" + ("0" + (today.getMonth() + 1)).slice(-2) + "/" + today.getFullYear();
+            
+            // Set default dates for all reports
             document.getElementById('repStartDate').value = dmyToday;
             document.getElementById('repEndDate').value = dmyToday;
+            document.getElementById('gRepStartDate').value = dmyToday;
+            document.getElementById('gRepEndDate').value = dmyToday;
 
             try { 
                 let savedUser = localStorage.getItem('matrix_last_user'); 
@@ -620,13 +768,20 @@
             } catch(e) {}
         };
 
-        window.performLogin = async function() {
+        window.performLogin = async function(event) {
             let uInput = document.getElementById('loginUsername').value.trim();
             let pInput = document.getElementById('loginPassword').value.trim();
             let err = document.getElementById('loginError');
+            let btn = (event && event.target && event.target.tagName === 'BUTTON') ? event.target : null;
+            
+            if(btn) btn.classList.add('btn-shake');
             
             const userSnap = await getDocs(collection(db, "users"));
             window.usersModel = userSnap.docs.map(d => d.data());
+
+            if(btn) {
+                setTimeout(() => btn.classList.remove('btn-shake'), 100);
+            }
 
             let foundUser = window.usersModel.find(u => u.username.toLowerCase() === uInput.toLowerCase() && u.password === pInput);
             if(foundUser) {
@@ -641,6 +796,7 @@
                 applyPermissions();
                 localStorage.setItem('matrix_last_user', window.currentUser.username);
                 document.getElementById('workspace-area').style.display = 'none';
+                document.getElementById('home-screen').style.display = 'flex';
                 document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited`;
             } else { err.style.display = 'block'; }
         };
@@ -653,12 +809,12 @@
                 row[field] = value;
                 if (window.currentUser && window.currentUser.floor) { row.floor = window.currentUser.floor; }
                 
-                await setDoc(rowRef, row, { merge: true });
+                setDoc(rowRef, row, { merge: true });
 
                 if(['workerName', 'mobileNo', 'blockNo'].includes(field)) {
                     if(row.workerName && row.mobileNo && row.blockNo) {
                         const worker = { name: row.workerName.trim(), mobileNo: row.mobileNo, blockNo: row.blockNo };
-                        await setDoc(doc(db, "workers", worker.name.toLowerCase()), worker);
+                        setDoc(doc(db, "workers", worker.name.toLowerCase()), worker);
                         const wIdx = window.workers.findIndex(w => w.name.toLowerCase() === worker.name.toLowerCase());
                         if(wIdx > -1) window.workers[wIdx] = worker; else window.workers.push(worker);
                     }
@@ -666,10 +822,14 @@
             }
         };
 
-        window.saveAdminData = async function() {
+        window.saveAdminData = async function(event) {
+            let btn = (event && event.target && event.target.tagName === 'BUTTON') ? event.target : document.getElementById('btnSaveAdminData');
+            
             let buyer = document.getElementById('modBuyer').value.trim();
             let styleName = document.getElementById('modStyle').value.trim();
             if (!styleName) { alert("Please enter the Style name!"); return; }
+            
+            if(btn) btn.classList.add('btn-shake');
             
             let allowedFloors = [];
             document.querySelectorAll('.modFloor:checked').forEach(cb => allowedFloors.push(cb.value));
@@ -686,9 +846,15 @@
 
             const today = new Date().toLocaleDateString('en-GB');
             const styleObj = { bookName: window.currentAdminBook, buyer, styleName, colors, rates, allowedFloors, createDate: today };
+            
+            const oldStyle = window.currentEditingStyleIndex > -1 ? window.styles[window.currentEditingStyleIndex] : null;
 
             await setDoc(doc(db, "styles", `${window.currentAdminBook}_${styleName}`), styleObj);
             
+            if (oldStyle && oldStyle.styleName !== styleName) {
+                await deleteDoc(doc(db, "styles", `${window.currentAdminBook}_${oldStyle.styleName}`));
+            }
+
             if (window.currentEditingStyleIndex > -1) {
                 window.styles[window.currentEditingStyleIndex] = styleObj;
             } else {
@@ -698,11 +864,25 @@
             let start = parseInt(document.getElementById('tcStart').value);
             let end = parseInt(document.getElementById('tcEnd').value);
             if (start && end && start <= end) {
-                for (let i = start; i <= end; i++) {
-                    const rowKey = `${window.currentAdminBook}_${styleName}_${i}`;
-                    const row = { bookName: window.currentAdminBook, idNo: i, styleName: styleName, issueDate: "", workerName: "", mobileNo: "", blockNo: "", color: "", issueQty: "", rate: "", receiveQty: "", receiveDate: "", floor: "" };
-                    await setDoc(doc(db, "production", rowKey), row, { merge: true });
+                if (window.currentEditingStyleIndex === -1) {
+                    // NEW STYLE - Create empty fields explicitly
+                    for (let i = start; i <= end; i++) {
+                        const rowKey = `${window.currentAdminBook}_${styleName}_${i}`;
+                        const row = { bookName: window.currentAdminBook, idNo: i, styleName: styleName, issueDate: "", workerName: "", mobileNo: "", blockNo: "", color: "", issueQty: "", rate: "", receiveQty: "", receiveDate: "", floor: "" };
+                        await setDoc(doc(db, "production", rowKey), row, { merge: true });
+                    }
+                } else {
+                    // UPDATE STYLE - DO NOT OVERWRITE EXISTING FIELDS! Only establish document existance if missing
+                    for (let i = start; i <= end; i++) {
+                        const rowKey = `${window.currentAdminBook}_${styleName}_${i}`;
+                        const row = { bookName: window.currentAdminBook, idNo: i, styleName: styleName };
+                        await setDoc(doc(db, "production", rowKey), row, { merge: true });
+                    }
                 }
+            }
+
+            if(btn) {
+                setTimeout(() => btn.classList.remove('btn-shake'), 100);
             }
 
             resetAdminModalForm();
@@ -716,15 +896,25 @@
 
         window.deleteStyle = async function(index, event) {
             event.stopPropagation();
+            let btn = (event && event.target) ? event.target : null;
             const s = window.styles[index];
             if(!confirm(`Delete Style: ${s.styleName}?`)) return;
+            
+            if(btn) btn.classList.add('btn-shake');
+            
             await deleteDoc(doc(db, "styles", `${s.bookName}_${s.styleName}`));
             window.styles.splice(index, 1);
+            
+            if(btn) {
+                setTimeout(() => btn.classList.remove('btn-shake'), 100);
+            }
+            
             renderDefaultStylesList();
             renderSavedAdminStylesList();
         };
 
-        window.addPasswordUser = async function() {
+        window.addPasswordUser = async function(event) {
+            let btn = (event && event.target) ? event.target : document.getElementById('btn_add_user');
             const name = document.getElementById('u_name').value.trim();
             const pass = document.getElementById('u_pass').value.trim();
             const sect = document.getElementById('u_section').value;
@@ -732,27 +922,46 @@
             const role = document.getElementById('u_role').value;
             if(!name || pass === '') { alert("Please enter both Username and Password!"); return; }
 
+            if(btn) btn.classList.add('btn-shake');
+
             const user = { username: name, password: pass, section: sect, floor: flor, role: role };
             
-            // Delete old user document if editing and username changed
-            if (window.editingUser && window.editingUser.toLowerCase() !== name.toLowerCase()) {
+            if (window.editingUser) {
                 await deleteDoc(doc(db, "users", window.editingUser.toLowerCase()));
+                await deleteDoc(doc(db, "users", window.editingUser));
+                window.usersModel = window.usersModel.filter(u => u.username.toLowerCase() !== window.editingUser.toLowerCase());
             }
 
+            window.usersModel = window.usersModel.filter(u => u.username.toLowerCase() !== name.toLowerCase());
+
+            window.usersModel.push(user);
             await setDoc(doc(db, "users", name.toLowerCase()), user);
             
-            const userSnap = await getDocs(collection(db, "users"));
-            window.usersModel = userSnap.docs.map(d => d.data());
+            if(btn) {
+                setTimeout(() => btn.classList.remove('btn-shake'), 100);
+            }
+            
             renderUsersTable();
             window.cancelEdit();
         };
 
-        window.deleteUser = async function(index) {
+        window.deleteUser = async function(index, event) {
+            let btn = (event && event.target) ? event.target : null;
             const u = window.usersModel[index];
             if(u.username === window.currentUser.username) { alert("Cannot delete self."); return; }
             if(!confirm("Delete user?")) return;
+            
+            if(btn) btn.classList.add('btn-shake');
+            
             await deleteDoc(doc(db, "users", u.username.toLowerCase()));
+            await deleteDoc(doc(db, "users", u.username));
+            
             window.usersModel.splice(index, 1);
+            
+            if(btn) {
+                setTimeout(() => btn.classList.remove('btn-shake'), 100);
+            }
+            
             renderUsersTable();
         };
 
@@ -767,6 +976,9 @@
             
             let maxId = 50;
             data.forEach(r => { if(r.idNo > maxId) maxId = r.idNo; });
+            
+            let idDisplay = document.getElementById('idRangeDisplay');
+            if(idDisplay) idDisplay.innerText = `(1-${maxId})`;
             
             for(let i=1; i<=maxId; i++) {
                 const cloudRow = data.find(r => r.idNo === i);
@@ -785,15 +997,18 @@
                 } 
             }
             
+            document.getElementById('home-screen').style.display = 'none';
             document.getElementById('workspace-area').style.display = 'flex';
             
-            // Restore Production UI visibility
             document.getElementById('infoRowSearch').style.display = 'flex';
             document.getElementById('infoRowStyles').style.display = 'flex';
             document.getElementById('activeStyleDetails').style.display = 'flex';
             document.getElementById('infoRowId').style.display = 'flex';
             document.getElementById('tabsHeaderContainer').style.display = 'flex';
-            document.getElementById('tab-password').style.borderTop = 'none';
+            
+            document.getElementById('tab-password').style.display = 'none';
+            document.getElementById('tab-global-reports').style.display = 'none';
+            document.getElementById('tab-code-vault').style.display = 'none';
 
             window.currentProductionBook = targetSection.toUpperCase();
             document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [${bookName}]`;
@@ -816,13 +1031,13 @@
                 document.getElementById('lblRate').innerText = activeStyleObj.rates.map(r => `${r.name}(${r.tk}Tk)`).join(', ');
                 document.getElementById('lblDate').innerText = activeStyleObj.createDate || "N/A";
             }
-            document.getElementById('styleSearchInput').value = ""; // Clear search on selection
+            document.getElementById('styleSearchInput').value = ""; 
             renderDefaultStylesList();
             await window.fetchRowsForStyle();
         };
 
-        // NEW: Execute clearing rows from DB exactly via merge strategy
-        window.executeDeleteRows = async function() {
+        window.executeDeleteRows = async function(event) {
+            let btn = (event && event.target) ? event.target : null;
             let start = parseInt(document.getElementById('delStartId').value);
             let end = parseInt(document.getElementById('delEndId').value);
             if(!start || !end || start > end) {
@@ -830,25 +1045,182 @@
             }
             if(!confirm(`Are you sure you want to clear data for rows ${start} to ${end} in style ${window.deleteTargetStyle}?`)) return;
 
+            if(btn) btn.classList.add('btn-shake');
+
             for(let i=start; i<=end; i++) {
                 const rowKey = `${window.deleteTargetBook}_${window.deleteTargetStyle}_${i}`;
                 const rowRef = doc(db, "production", rowKey);
-                // Blank out only values, retain structural fields
                 await setDoc(rowRef, {
                     issueDate: "", workerName: "", mobileNo: "", blockNo: "", color: "", issueQty: "", rate: "", receiveQty: "", receiveDate: ""
                 }, {merge: true});
 
-                // Update loaded model
                 let r = window.rowsModel.find(x => x.idNo === i && x.styleName === window.deleteTargetStyle && x.bookName === window.deleteTargetBook);
                 if(r) {
                     r.issueDate = ""; r.workerName = ""; r.mobileNo = ""; r.blockNo = ""; r.color = ""; r.issueQty = ""; r.rate = ""; r.receiveQty = ""; r.receiveDate = "";
                 }
             }
+            
+            if(btn) {
+                setTimeout(() => btn.classList.remove('btn-shake'), 100);
+            }
+            
             window.closeDeleteRowModal();
             if(window.activeStyleName === window.deleteTargetStyle && window.currentProductionBook === window.deleteTargetBook) {
                 renderTable();
             }
             alert("Rows cleared successfully!");
+        };
+
+        window.executeDeleteByDate = async function(event) {
+            let btn = (event && event.target) ? event.target : null;
+            let book = document.getElementById('delDateBook').value;
+            let style = document.getElementById('delDateStyle').value;
+            let targetDate = document.getElementById('delDateInput').value;
+            let floor = document.getElementById('delDateFloor').value;
+
+            if(!targetDate) { alert("Please select a date!"); return; }
+            if(!confirm(`Are you sure you want to clear entries for Date: ${targetDate}?`)) return;
+
+            if(btn) btn.classList.add('btn-shake');
+
+            let qConstraints = [where("bookName", "==", book)];
+            if (style !== "All") qConstraints.push(where("styleName", "==", style));
+            
+            const q = query(collection(db, "production"), ...qConstraints);
+            const snap = await getDocs(q);
+            let count = 0;
+            
+            for(let docSnap of snap.docs) {
+                let r = docSnap.data();
+                
+                if (r.issueDate !== targetDate && r.receiveDate !== targetDate) continue;
+                if (floor !== "All" && r.floor !== floor) continue;
+                
+                const rowRef = doc(db, "production", docSnap.id);
+                await setDoc(rowRef, {
+                    issueDate: "", workerName: "", mobileNo: "", blockNo: "", color: "", issueQty: "", rate: "", receiveQty: "", receiveDate: ""
+                }, {merge: true});
+
+                let localR = window.rowsModel.find(x => x.idNo === r.idNo && x.styleName === r.styleName && x.bookName === r.bookName);
+                if(localR) {
+                    localR.issueDate = ""; localR.workerName = ""; localR.mobileNo = ""; localR.blockNo = ""; localR.color = ""; localR.issueQty = ""; localR.rate = ""; localR.receiveQty = ""; localR.receiveDate = "";
+                }
+                count++;
+            }
+
+            if(btn) {
+                setTimeout(() => btn.classList.remove('btn-shake'), 100);
+            }
+
+            alert(`Cleared ${count} rows successfully!`);
+            window.closeDeleteDateModal();
+            if(book === window.currentProductionBook) {
+                renderTable();
+            }
+        };
+
+        window.saveCodeNote = async function(event) {
+            let btn = event ? event.target : null;
+            let title = document.getElementById('codeTitle').value.trim();
+            let content = document.getElementById('codeContent').value;
+            if(!title) { alert("Please enter a title for the note!"); return; }
+
+            if(btn) btn.classList.add('btn-shake');
+
+            let noteId = window.currentEditingCodeId;
+            if (!noteId) {
+                noteId = "code_" + Date.now();
+            }
+
+            const noteData = { title, content, updatedAt: new Date().toISOString() };
+            await setDoc(doc(db, "codenotes", noteId), noteData);
+
+            let existingIdx = window.codeNotes.findIndex(c => c.id === noteId);
+            if(existingIdx > -1) {
+                window.codeNotes[existingIdx] = { id: noteId, ...noteData };
+            } else {
+                window.codeNotes.push({ id: noteId, ...noteData });
+            }
+
+            if(btn) setTimeout(() => btn.classList.remove('btn-shake'), 100);
+            
+            window.clearCodeForm();
+            window.renderCodeNotesList();
+        };
+
+        window.deleteCodeNote = async function(id, event) {
+            if(event) event.stopPropagation();
+            if(!confirm("Are you sure you want to delete this note?")) return;
+
+            await deleteDoc(doc(db, "codenotes", id));
+            window.codeNotes = window.codeNotes.filter(c => c.id !== id);
+
+            if (window.currentEditingCodeId === id) {
+                window.clearCodeForm();
+            }
+            window.renderCodeNotesList();
+        };
+        
+        // --- GLOBAL REPORT GENERATION SYSTEM ---
+        window.generateGlobalReport = async function(event) {
+            let btn = (event && event.target) ? event.target : null;
+            if(btn) { btn.classList.add('btn-shake'); setTimeout(() => btn.classList.remove('btn-shake'), 100); }
+
+            let type = document.getElementById('gRepSelectInput').value; 
+            let dFromStr = document.getElementById('gRepStartDate').value; 
+            let dToStr = document.getElementById('gRepEndDate').value; 
+            let sectionInput = document.getElementById('gRepSection').value;
+            let floorInput = document.getElementById('gRepFloor').value.trim().toLowerCase(); 
+            let blockInput = document.getElementById('gRepBlock').value.trim().toLowerCase();
+
+            let qConstraints = [];
+            if(sectionInput !== 'All') {
+                qConstraints.push(where("bookName", "==", sectionInput));
+            }
+
+            const q = query(collection(db, "production"), ...qConstraints);
+            const snap = await getDocs(q);
+            let allData = snap.docs.map(d => d.data());
+
+            const parseDate = (dStr) => {
+                if(!dStr) return null;
+                const [d, m, y] = dStr.split('/');
+                return new Date(y, m - 1, d);
+            };
+
+            let sDate = parseDate(dFromStr); 
+            let eDate = parseDate(dToStr);
+
+            let rawData = allData.filter(r => {
+                if (!r.workerName) return false;
+                
+                if (type === '6_OpWiseIssueDetails') {
+                    if (r.receiveQty || r.rate || r.receiveDate || !r.issueQty) return false;
+                } else {
+                    if (!r.receiveQty) return false;
+                }
+
+                if (blockInput !== 'all' && blockInput !== '') {
+                    if (!(r.blockNo && r.blockNo.toLowerCase().includes(blockInput))) return false;
+                }
+                if (floorInput !== 'all' && floorInput !== '') {
+                    if (!(r.floor && r.floor.toLowerCase().includes(floorInput))) return false;
+                }
+                
+                let rDate = null;
+                if (type === '6_OpWiseIssueDetails') {
+                    rDate = parseDate(r.issueDate);
+                } else {
+                    rDate = parseDate(r.receiveDate || r.issueDate);
+                }
+                
+                if (rDate) { if (sDate && rDate < sDate) return false; if (eDate && rDate > eDate) return false; } else { return false; } 
+                return true;
+            });
+
+            if (rawData.length === 0) { alert("No data found for the selected criteria!"); return; }
+
+            window.processAndShowReport(rawData, type, dFromStr, dToStr, floorInput, sectionInput);
         };
     </script>
 
@@ -856,16 +1228,25 @@
     <script>
         function applyPermissions() {
             let adminBtn = document.getElementById('menuAdminBtn'); 
-            if(window.currentUser.role === 'Admin') { 
-                adminBtn.style.display = 'inline-block'; 
-            } else { 
-                adminBtn.style.display = 'none'; 
-            }
+            adminBtn.style.display = 'inline-block'; 
         }
 
         function showAccessDenied(message) { document.getElementById('accessDeniedMsg').innerText = message; document.getElementById('accessDeniedModal').style.display = 'flex'; }
         function closeAccessDenied() { document.getElementById('accessDeniedModal').style.display = 'none'; }
-        function goHome() { closeAllMenus(); document.getElementById('workspace-area').style.display = 'none'; document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited`; }
+        
+        function goHome() { 
+            closeAllMenus(); 
+            if (window.currentUser && window.currentUser.role !== 'Admin' && window.currentUser.section && window.currentUser.section !== 'All') {
+                let sectionName = window.currentUser.section;
+                let bookName = sectionName.charAt(0).toUpperCase() + sectionName.slice(1).toLowerCase() + ' Book';
+                window.openProductionBook(null, bookName);
+                return;
+            }
+            document.getElementById('workspace-area').style.display = 'none'; 
+            document.getElementById('home-screen').style.display = 'flex';
+            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited`; 
+        }
+        
         function logout() { location.reload(); }
 
         function toggleMenu(menuId, btnElement, event) { event.stopPropagation(); closeAllMenus(); document.getElementById(menuId).style.display = 'block'; }
@@ -880,6 +1261,8 @@
             document.getElementById('tab-book').style.display = 'none'; 
             document.getElementById('tab-reports').style.display = 'none'; 
             document.getElementById('tab-password').style.display = 'none';
+            document.getElementById('tab-global-reports').style.display = 'none';
+            document.getElementById('tab-code-vault').style.display = 'none';
             
             if(tabName === 'Book') { 
                 document.getElementById('tab-btn-book').classList.add('active'); 
@@ -910,7 +1293,6 @@
             });
         }
 
-        // --- INSTANT LIVE SEARCH WITHOUT DROPDOWN ---
         function filterStylesInstant() {
             let q = document.getElementById('styleSearchInput').value.trim(); 
             renderDefaultStylesList(q);
@@ -943,7 +1325,6 @@
 
             toShow.forEach(row => {
                 let tr = document.createElement("tr"); tr.id = 'row-' + row.idNo; 
-                // --- ADMIN CAN EDIT EVERYTHING, OTHERS ARE LOCKED IF RECEIVE QTY EXISTS ---
                 if(!!row.receiveQty && window.currentUser.role !== 'Admin') tr.classList.add('locked-row');
                 
                 let displayReceiveQty = (row.receiveQty === '0' || row.receiveQty === 0 || !row.receiveQty) ? '' : row.receiveQty;
@@ -983,11 +1364,9 @@
             let tr = nameInputEl.closest('tr'); tr.querySelector('.name-input').value = workerObj.name; tr.querySelector('.mobile-input').value = workerObj.mobileNo; tr.querySelector('.block-input').value = workerObj.blockNo; tr.querySelector('.color-input').focus();
         }
 
-        // --- RATE POPUP HANDLERS (WITH VALIDATION AND DOM SYNC FIX) ---
         let activePopupRowId = null; let activeRowForPopup = null;
         function openRateQtyPopup(idNo, inputField, event) {
             event.stopPropagation(); 
-            // --- ADMIN CAN OPEN POPUP EVEN ON LOCKED ROWS ---
             if(inputField.closest('tr').classList.contains('locked-row')) return; 
             
             activePopupRowId = idNo; activeRowForPopup = inputField.closest('tr');
@@ -997,17 +1376,33 @@
             activeStyleObj.rates.forEach(r => {
                 let val = (rowObj.rate === r.name) ? (rowObj.receiveQty || '') : '';
                 let trEl = document.createElement('tr');
-                trEl.innerHTML = `<td style="padding-left:5px;">${r.name}</td><td><input type="number" class="popup-qty-input" autocomplete="nope" data-ratename="${r.name}" value="${val}" onkeydown="if(event.key==='Enter') saveRateQty()"></td>`;
+                trEl.innerHTML = `<td style="padding-left:5px;">${r.name}</td><td><input type="number" class="popup-qty-input" autocomplete="nope" data-ratename="${r.name}" value="${val}" onkeydown="handlePopupQtyKey(event, this)"></td>`;
                 tbody.appendChild(trEl);
             });
             popup.style.display = 'flex'; popup.style.top = (rect.bottom + window.scrollY + 2) + 'px'; popup.style.left = (rect.left + window.scrollX - 180) + 'px';
             setTimeout(() => tbody.querySelector('input')?.focus(), 50);
         }
 
-        function saveRateQty() {
+        function handlePopupQtyKey(e, input) {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                window.saveRateQty();
+            } else if(e.key === 'ArrowDown') {
+                e.preventDefault();
+                let nextTr = input.closest('tr').nextElementSibling;
+                if(nextTr) { let nextInput = nextTr.querySelector('.popup-qty-input'); if(nextInput) nextInput.focus(); }
+            } else if(e.key === 'ArrowUp') {
+                e.preventDefault();
+                let prevTr = input.closest('tr').previousElementSibling;
+                if(prevTr) { let prevInput = prevTr.querySelector('.popup-qty-input'); if(prevInput) prevInput.focus(); }
+            }
+        }
+
+        window.saveRateQty = function(event) {
+            let btn = (event && event.target && event.target.tagName === 'BUTTON') ? event.target : null;
+            
             let inputs = document.querySelectorAll('.popup-qty-input');
             let tr = document.getElementById('row-' + activePopupRowId);
-            // Read issueQty straight from DOM element to avoid async delay issue
             let issueQty = parseInt(tr.querySelector('.issue-qty-input').value) || 0;
 
             let hasSaved = false;
@@ -1015,39 +1410,56 @@
                 let val = input.value.trim();
                 if(val !== '') { 
                     let receiveQty = parseInt(val) || 0;
-                    
-                    // VALIDATION CHECK
                     if(receiveQty > issueQty) {
                         alert(`Receive Qty (${receiveQty}) cannot be greater than Issue Qty (${issueQty})!`);
                         input.focus();
-                        return; // Abort saving
+                        return; 
                     }
+                }
+            }
 
-                    if (receiveQty === 0) {
-                        window.updateModel(activePopupRowId, 'rate', '');
-                        window.updateModel(activePopupRowId, 'receiveQty', '');
-                    } else {
-                        window.updateModel(activePopupRowId, 'rate', input.getAttribute('data-ratename')); 
-                        window.updateModel(activePopupRowId, 'receiveQty', val); 
-                    }
-                    hasSaved = true;
-                    break; 
-                } 
-            }
-            if(!hasSaved) {
-                window.updateModel(activePopupRowId, 'rate', '');
-                window.updateModel(activePopupRowId, 'receiveQty', '');
-            }
-            closeRateQtyPopup(); renderTable(); 
-            let targetTr = document.getElementById('row-' + activePopupRowId); 
-            if(targetTr) targetTr.querySelector('.receive-date-input').focus();
+            if(btn) btn.classList.add('btn-shake');
+
+            setTimeout(() => {
+                if(btn) btn.classList.remove('btn-shake');
+                for(let input of inputs) { 
+                    let val = input.value.trim();
+                    if(val !== '') { 
+                        let receiveQty = parseInt(val) || 0;
+                        if (receiveQty === 0) {
+                            window.updateModel(activePopupRowId, 'rate', '');
+                            window.updateModel(activePopupRowId, 'receiveQty', '');
+                        } else {
+                            window.updateModel(activePopupRowId, 'rate', input.getAttribute('data-ratename')); 
+                            window.updateModel(activePopupRowId, 'receiveQty', val); 
+                        }
+                        hasSaved = true;
+                        break; 
+                    } 
+                }
+                if(!hasSaved) {
+                    window.updateModel(activePopupRowId, 'rate', '');
+                    window.updateModel(activePopupRowId, 'receiveQty', '');
+                }
+                closeRateQtyPopup(); renderTable(); 
+                let targetTr = document.getElementById('row-' + activePopupRowId); 
+                if(targetTr) targetTr.querySelector('.receive-date-input').focus();
+            }, 100);
         }
 
-        function deleteRateQty() { window.updateModel(activePopupRowId, 'receiveQty', ''); window.updateModel(activePopupRowId, 'rate', ''); closeRateQtyPopup(); renderTable(); }
+        window.deleteRateQty = function(event) { 
+            let btn = (event && event.target) ? event.target : null;
+            if(btn) btn.classList.add('btn-shake');
+            setTimeout(() => {
+                if(btn) btn.classList.remove('btn-shake');
+                window.updateModel(activePopupRowId, 'receiveQty', ''); 
+                window.updateModel(activePopupRowId, 'rate', ''); 
+                closeRateQtyPopup(); 
+                renderTable(); 
+            }, 100);
+        }
         function closeRateQtyPopup() { document.getElementById('rateQtyPopup').style.display = 'none'; }
 
-
-        // --- COLOR POPUP HANDLERS ---
         let activeColorPopupRowId = null;
         function openColorPopup(idNo, inputField, event) {
             event.stopPropagation();
@@ -1106,24 +1518,26 @@
             }
             closeColorPopup();
         }
-        function deleteColor() {
-            if (activeColorPopupRowId !== null) {
-                window.updateModel(activeColorPopupRowId, 'color', '');
-                renderTable();
-                let tr = document.getElementById(`row-${activeColorPopupRowId}`); 
-                if(tr) tr.querySelector('.issue-qty-input').focus();
-            }
-            closeColorPopup();
+        window.deleteColor = function(event) {
+            let btn = (event && event.target) ? event.target : null;
+            if(btn) btn.classList.add('btn-shake');
+            setTimeout(() => {
+                if(btn) btn.classList.remove('btn-shake');
+                if (activeColorPopupRowId !== null) {
+                    window.updateModel(activeColorPopupRowId, 'color', '');
+                    renderTable();
+                    let tr = document.getElementById(`row-${activeColorPopupRowId}`); 
+                    if(tr) tr.querySelector('.issue-qty-input').focus();
+                }
+                closeColorPopup();
+            }, 100);
         }
         function closeColorPopup() { document.getElementById('colorPopup').style.display = 'none'; }
 
-
-        // --- CALENDAR LOGIC ---
         let currentCalDate = new Date(), selectedCalDate = null, activeDateInputIdNo = null, activeDateField = null, activeDateInputEl = null;
         function openCalendar(e, inputEl, idNo, field) {
             e.stopPropagation(); activeDateInputIdNo = idNo; activeDateField = field; activeDateInputEl = inputEl;
             
-            // Pre-select existing date if parsed, otherwise today.
             let d = new Date();
             if (inputEl.value) {
                 let parts = inputEl.value.split('/');
@@ -1152,7 +1566,7 @@
                     else if (date > daysInMonth) cell.innerText = "";
                     else {
                         cell.innerText = date; let d = date;
-                        cell.onclick = (ev) => { ev.stopPropagation(); selectedCalDate = new Date(y, m, d); saveCalendarDate(); };
+                        cell.onclick = (ev) => { ev.stopPropagation(); selectedCalDate = new Date(y, m, d); window.saveCalendarDate(); };
                         if (selectedCalDate?.getDate() === date && selectedCalDate?.getMonth() === m && selectedCalDate?.getFullYear() === y) cell.className = 'selected';
                         date++;
                     }
@@ -1162,18 +1576,38 @@
             }
         }
         function changeMonth(delta) { currentCalDate.setMonth(currentCalDate.getMonth() + delta); renderCalendar(); }
-        function saveCalendarDate() {
-            if(selectedCalDate) {
-                let dmy = ("0" + selectedCalDate.getDate()).slice(-2) + "/" + ("0" + (selectedCalDate.getMonth() + 1)).slice(-2) + "/" + selectedCalDate.getFullYear();
-                if(activeDateInputIdNo === 0) { document.getElementById(activeDateField).value = dmy; } 
-                else { if(activeDateInputEl) activeDateInputEl.value = dmy; window.updateModel(activeDateInputIdNo, activeDateField, dmy); renderTable(); }
-            }
-            closeCalendar();
+        
+        window.saveCalendarDate = function(event) {
+            let btn = (event && event.target && event.target.tagName === 'BUTTON') ? event.target : null;
+            if(btn) btn.classList.add('btn-shake');
+            setTimeout(() => {
+                if(btn) btn.classList.remove('btn-shake');
+                if(selectedCalDate) {
+                    let dmy = ("0" + selectedCalDate.getDate()).slice(-2) + "/" + ("0" + (selectedCalDate.getMonth() + 1)).slice(-2) + "/" + selectedCalDate.getFullYear();
+                    if(activeDateInputIdNo === 0) { 
+                        if(activeDateInputEl) activeDateInputEl.value = dmy;
+                    } 
+                    else { if(activeDateInputEl) activeDateInputEl.value = dmy; window.updateModel(activeDateInputIdNo, activeDateField, dmy); renderTable(); }
+                }
+                closeCalendar();
+            }, 100);
         }
         function closeCalendar() { document.getElementById('customDatePicker').style.display = 'none'; }
-        function clearCalendarDate() { if(activeDateInputIdNo === 0) document.getElementById(activeDateField).value = ''; else window.updateModel(activeDateInputIdNo, activeDateField, ''); renderTable(); closeCalendar(); }
+        
+        window.clearCalendarDate = function(event) { 
+            let btn = (event && event.target) ? event.target : null;
+            if(btn) btn.classList.add('btn-shake');
+            setTimeout(() => {
+                if(btn) btn.classList.remove('btn-shake');
+                if(activeDateInputIdNo === 0) {
+                    if(activeDateInputEl) activeDateInputEl.value = '';
+                } 
+                else window.updateModel(activeDateInputIdNo, activeDateField, ''); 
+                renderTable(); 
+                closeCalendar(); 
+            }, 100);
+        }
 
-        // --- KEYBOARD SEQUENCING ---
         function handleDateKey(e, input, next, idNo, field) {
             if(e.key === '+') { 
                 e.preventDefault(); 
@@ -1185,7 +1619,7 @@
                 let trIdStr = input.closest('tr').id;
                 
                 if (picker.style.display === 'flex') {
-                    saveCalendarDate(); // This handles closing and triggers renderTable()
+                    window.saveCalendarDate(); 
                 } else {
                     if(!input.value) { 
                         let d = new Date(); 
@@ -1194,7 +1628,6 @@
                     }
                 }
 
-                // Since renderTable() might have recreated the rows, fetch the row again
                 let currentTr = document.getElementById(trIdStr);
                 if (currentTr) {
                     if(next === 'next-row') { 
@@ -1210,7 +1643,7 @@
         function handleGenericEnter(e, input, next) { 
             if(e.key === 'Enter') { 
                 e.preventDefault(); 
-                input.blur(); // Forces onchange event
+                input.blur(); 
                 input.closest('tr').querySelector('.'+next).focus(); 
             } 
         }
@@ -1229,7 +1662,7 @@
         function handleGenericEnterToRate(e, idNo, input) { 
             if(e.key === 'Enter') { 
                 e.preventDefault(); 
-                input.blur(); // Forces onchange event immediately
+                input.blur(); 
                 let nextEl = input.closest('tr').querySelector('.rate-input');
                 if(nextEl) nextEl.focus();
             } 
@@ -1256,7 +1689,6 @@
         }
         function handleSearchIdEnter(e) { if(e.key === "Enter") { e.preventDefault(); let searchId = document.getElementById('searchIdInput').value; if(searchId) { let tr = document.getElementById('row-' + searchId); if(tr) { tr.scrollIntoView({behavior: 'smooth', block: 'center'}); let dateInput = tr.querySelector('.issue-date-input'); if(dateInput) dateInput.focus(); } } } }
 
-        // --- ADMIN HELPERS ---
         function openAdminModal(e, bookName) { 
             e.stopPropagation(); 
             closeAllMenus(); 
@@ -1269,12 +1701,12 @@
         function closeAdminModal() { document.getElementById('adminModal').style.display = 'none'; }
         function addColorRow() { 
             let div = document.createElement('div'); div.className = 'rate-item'; 
-            div.innerHTML = `<input type="text" class="modColorInput" autocomplete="nope" spellcheck="false" style="flex:1;" placeholder="Color name..."><span class="delete-btn" onclick="this.parentElement.remove()">✖</span>`; 
+            div.innerHTML = `<input type="text" class="modColorInput" autocomplete="nope" spellcheck="false" style="flex:1;" placeholder="Color name..."><span class="delete-btn" onclick="window.shakeAndRemove(this)">✖</span>`; 
             document.getElementById('colorContainer').appendChild(div); 
         }
         function addRateRow() { 
             let div = document.createElement('div'); div.className = 'rate-item'; 
-            div.innerHTML = `<input type="text" class="modRateName" autocomplete="nope" spellcheck="false" style="width:90px;"><input type="text" class="modRateTk" autocomplete="nope" spellcheck="false" style="width:40px;" placeholder="Tk"><span class="delete-btn" onclick="this.parentElement.remove()">✖</span>`; 
+            div.innerHTML = `<input type="text" class="modRateName" autocomplete="nope" spellcheck="false" style="width:90px;"><input type="text" class="modRateTk" autocomplete="nope" spellcheck="false" style="width:40px;" placeholder="Tk"><span class="delete-btn" onclick="window.shakeAndRemove(this)">✖</span>`; 
             document.getElementById('rateContainer').appendChild(div); 
         }
         function resetAdminModalForm() { 
@@ -1290,6 +1722,11 @@
             
             document.querySelectorAll('.modFloor').forEach(cb => cb.checked = true);
             window.currentEditingStyleIndex = -1;
+            
+            let btn = document.getElementById('btnSaveAdminData');
+            btn.innerText = "Save Data";
+            btn.style.background = "linear-gradient(135deg, #5cb85c, #449d44)";
+            btn.style.border = "1px solid #398439";
         }
         function renderSavedAdminStylesList() {
             let container = document.getElementById('savedStylesList'); 
@@ -1309,37 +1746,47 @@
         
         window.editStyle = function(idx, event) {
             event.stopPropagation();
-            let s = window.styles[idx];
-            document.getElementById('modBuyer').value = s.buyer;
-            document.getElementById('modStyle').value = s.styleName;
+            let btn = event ? event.target : null;
+            if(btn) btn.classList.add('btn-shake');
             
-            document.getElementById('colorContainer').innerHTML = "";
-            if (s.colors && s.colors.length > 0) {
-                s.colors.forEach(c => {
-                    let div = document.createElement('div'); div.className = 'rate-item'; div.innerHTML = `<input type="text" class="modColorInput" autocomplete="nope" spellcheck="false" style="flex:1;" value="${c}" placeholder="Color name..."><span class="delete-btn" onclick="this.parentElement.remove()">✖</span>`; document.getElementById('colorContainer').appendChild(div);
+            setTimeout(() => {
+                if(btn) btn.classList.remove('btn-shake');
+                let s = window.styles[idx];
+                document.getElementById('modBuyer').value = s.buyer;
+                document.getElementById('modStyle').value = s.styleName;
+                
+                document.getElementById('colorContainer').innerHTML = "";
+                if (s.colors && s.colors.length > 0) {
+                    s.colors.forEach(c => {
+                        let div = document.createElement('div'); div.className = 'rate-item'; div.innerHTML = `<input type="text" class="modColorInput" autocomplete="nope" spellcheck="false" style="flex:1;" value="${c}" placeholder="Color name..."><span class="delete-btn" onclick="window.shakeAndRemove(this)">✖</span>`; document.getElementById('colorContainer').appendChild(div);
+                    });
+                } else {
+                    document.getElementById('colorContainer').innerHTML = `<div class="rate-item"><input type="text" class="modColorInput" autocomplete="nope" spellcheck="false" style="flex:1;" placeholder="Color name..."></div>`;
+                }
+
+                document.getElementById('rateContainer').innerHTML = "";
+                if (s.rates && s.rates.length > 0) {
+                    s.rates.forEach(r => {
+                        let div = document.createElement('div'); div.className = 'rate-item'; div.innerHTML = `<input type="text" class="modRateName" autocomplete="nope" spellcheck="false" style="width:90px;" value="${r.name}"><input type="text" class="modRateTk" autocomplete="nope" spellcheck="false" style="width:40px;" value="${r.tk}" placeholder="Tk"><span class="delete-btn" onclick="window.shakeAndRemove(this)">✖</span>`; document.getElementById('rateContainer').appendChild(div);
+                    });
+                } else {
+                    let defaultRate = (window.currentAdminBook === "LINKING") ? "COMPLETE" : ((window.currentAdminBook === "PACKING") ? "POLY" : window.currentAdminBook);
+                    document.getElementById('rateContainer').innerHTML = `<div class="rate-item"><input type="text" class="modRateName" autocomplete="nope" spellcheck="false" style="width:90px;" value="${defaultRate}"><input type="text" class="modRateTk" autocomplete="nope" spellcheck="false" style="width:40px;" placeholder="Tk"></div>`;
+                }
+
+                document.querySelectorAll('.modFloor').forEach(cb => {
+                    cb.checked = s.allowedFloors && s.allowedFloors.includes(cb.value);
                 });
-            } else {
-                document.getElementById('colorContainer').innerHTML = `<div class="rate-item"><input type="text" class="modColorInput" autocomplete="nope" spellcheck="false" style="flex:1;" placeholder="Color name..."></div>`;
-            }
 
-            document.getElementById('rateContainer').innerHTML = "";
-            if (s.rates && s.rates.length > 0) {
-                s.rates.forEach(r => {
-                    let div = document.createElement('div'); div.className = 'rate-item'; div.innerHTML = `<input type="text" class="modRateName" autocomplete="nope" spellcheck="false" style="width:90px;" value="${r.name}"><input type="text" class="modRateTk" autocomplete="nope" spellcheck="false" style="width:40px;" value="${r.tk}" placeholder="Tk"><span class="delete-btn" onclick="this.parentElement.remove()">✖</span>`; document.getElementById('rateContainer').appendChild(div);
-                });
-            } else {
-                let defaultRate = (window.currentAdminBook === "LINKING") ? "COMPLETE" : ((window.currentAdminBook === "PACKING") ? "POLY" : window.currentAdminBook);
-                document.getElementById('rateContainer').innerHTML = `<div class="rate-item"><input type="text" class="modRateName" autocomplete="nope" spellcheck="false" style="width:90px;" value="${defaultRate}"><input type="text" class="modRateTk" autocomplete="nope" spellcheck="false" style="width:40px;" placeholder="Tk"></div>`;
-            }
-
-            document.querySelectorAll('.modFloor').forEach(cb => {
-                cb.checked = s.allowedFloors && s.allowedFloors.includes(cb.value);
-            });
-
-            window.currentEditingStyleIndex = idx;
+                window.currentEditingStyleIndex = idx;
+                
+                let btnUpdate = document.getElementById('btnSaveAdminData');
+                btnUpdate.innerText = "Update Data";
+                btnUpdate.style.background = "linear-gradient(135deg, #FFD700, #E6C200)";
+                btnUpdate.style.border = "1px solid #CCA300";
+            }, 100);
         };
 
-        // --- NEW ROW DELETION / CLEAR MODAL HELPERS ---
         window.populateDeleteMenu = function() {
             let container = document.getElementById('deleteStylesListMenu');
             container.innerHTML = "";
@@ -1372,24 +1819,49 @@
             document.getElementById('deleteRowModal').style.display = 'none';
         };
 
-        // --- PASSWORD MANAGEMENT (DASHBOARD & EDIT FUNCTIONALITY) ---
+        window.openDeleteDateModal = function(e) {
+            if (e) e.stopPropagation();
+            closeAllMenus();
+            let books = [...new Set(window.styles.map(s => s.bookName))];
+            let bookSelect = document.getElementById('delDateBook');
+            bookSelect.innerHTML = books.map(b => `<option value="${b}">${b}</option>`).join('');
+            if(window.currentProductionBook) {
+                bookSelect.value = window.currentProductionBook;
+            }
+            window.populateDelDateStyles();
+            document.getElementById('delDateInput').value = '';
+            document.getElementById('delDateFloor').value = 'All';
+            document.getElementById('deleteDateModal').style.display = 'flex';
+        };
+
+        window.populateDelDateStyles = function() {
+            let book = document.getElementById('delDateBook').value;
+            let styleSelect = document.getElementById('delDateStyle');
+            let st = window.styles.filter(s => s.bookName === book);
+            styleSelect.innerHTML = `<option value="All">All Styles</option>` + st.map(s => `<option value="${s.styleName}">${s.styleName}</option>`).join('');
+        };
+
+        window.closeDeleteDateModal = function() {
+            document.getElementById('deleteDateModal').style.display = 'none';
+        };
+
         function openPasswordDashboard(e) { 
             if(e) e.stopPropagation(); 
             closeAllMenus(); 
+            document.getElementById('home-screen').style.display = 'none';
             document.getElementById('workspace-area').style.display = 'flex'; 
             
-            // Hide Production Headers & Tabs
             document.getElementById('infoRowSearch').style.display = 'none';
             document.getElementById('infoRowStyles').style.display = 'none';
             document.getElementById('activeStyleDetails').style.display = 'none';
             document.getElementById('infoRowId').style.display = 'none';
             document.getElementById('tabsHeaderContainer').style.display = 'none';
             
-            // Hide production tab contents
             document.getElementById('tab-book').style.display = 'none';
             document.getElementById('tab-reports').style.display = 'none';
+            document.getElementById('tab-global-reports').style.display = 'none';
+            document.getElementById('tab-code-vault').style.display = 'none';
             
-            // Show Password tab content and fix top border
             let passTab = document.getElementById('tab-password');
             passTab.style.display = 'flex';
             passTab.style.borderTop = '1px solid #A0A0A0';
@@ -1397,24 +1869,34 @@
             document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [Password Dashboard]`;
         }
 
-        window.editUser = function(idx) {
-            const u = window.usersModel[idx];
-            document.getElementById('u_name').value = u.username;
-            document.getElementById('u_pass').value = u.password;
-            document.getElementById('u_section').value = u.section;
-            document.getElementById('u_floor').value = u.floor;
-            document.getElementById('u_role').value = u.role;
+        window.editUser = function(idx, event) {
+            let btn = event ? event.target : null;
+            if(btn) btn.classList.add('btn-shake');
             
-            window.editingUser = u.username; // Keep track for exact updates
-            document.getElementById('btn_add_user').innerText = "Update User";
-            document.getElementById('btn_add_user').style.backgroundColor = "#FFD700"; // Highlight edit mode
-            document.getElementById('btn_cancel_edit').style.display = 'inline-block';
+            setTimeout(() => {
+                if(btn) btn.classList.remove('btn-shake');
+                const u = window.usersModel[idx];
+                document.getElementById('u_name').value = u.username;
+                document.getElementById('u_pass').value = u.password;
+                document.getElementById('u_section').value = u.section;
+                document.getElementById('u_floor').value = u.floor;
+                document.getElementById('u_role').value = u.role;
+                
+                window.editingUser = u.username; 
+                let btnUpdate = document.getElementById('btn_add_user');
+                btnUpdate.innerText = "Update User";
+                btnUpdate.style.background = "linear-gradient(135deg, #FFD700, #E6C200)";
+                btnUpdate.style.border = "1px solid #CCA300";
+                document.getElementById('btn_cancel_edit').style.display = 'inline-block';
+            }, 100);
         };
 
         window.cancelEdit = function() {
             window.editingUser = null;
-            document.getElementById('btn_add_user').innerText = "Add User";
-            document.getElementById('btn_add_user').style.backgroundColor = "#C1EB7B";
+            let btn = document.getElementById('btn_add_user');
+            btn.innerText = "Add User";
+            btn.style.background = "#C1EB7B";
+            btn.style.border = "1px solid #8BBF36";
             document.getElementById('btn_cancel_edit').style.display = 'none';
             document.getElementById('u_name').value = ''; 
             document.getElementById('u_pass').value = '';
@@ -1426,25 +1908,130 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${u.username}</td>
-                    <td>***</td>
+                    <td>${u.password}</td>
                     <td>${u.section}</td>
                     <td>${u.floor}</td>
                     <td>${u.role}</td>
                     <td style="font-weight:bold;">
-                        <span style="color:#0078D7; cursor:pointer; margin-right:6px;" onclick="window.editUser(${i})">Edit</span> | 
-                        <span style="color:red; cursor:pointer; margin-left:6px;" onclick="window.deleteUser(${i})">Delete</span>
+                        <span style="color:#0078D7; cursor:pointer; margin-right:6px;" onclick="window.editUser(${i}, event)">Edit</span> | 
+                        <span style="color:red; cursor:pointer; margin-left:6px;" onclick="window.deleteUser(${i}, event)">Delete</span>
                     </td>`;
                 tbody.appendChild(tr);
             });
         }
+        
+        // --- NEW CODE VAULT SYSTEM ---
+        window.openCodeVault = function(e) {
+            if(e) e.stopPropagation();
+            closeAllMenus();
+            
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('workspace-area').style.display = 'flex';
+            
+            document.getElementById('infoRowSearch').style.display = 'none';
+            document.getElementById('infoRowStyles').style.display = 'none';
+            document.getElementById('activeStyleDetails').style.display = 'none';
+            document.getElementById('infoRowId').style.display = 'none';
+            document.getElementById('tabsHeaderContainer').style.display = 'none';
+            
+            document.getElementById('tab-book').style.display = 'none';
+            document.getElementById('tab-reports').style.display = 'none';
+            document.getElementById('tab-password').style.display = 'none';
+            document.getElementById('tab-global-reports').style.display = 'none';
+            
+            let codeTab = document.getElementById('tab-code-vault');
+            codeTab.style.display = 'flex';
+            
+            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [Code Vault]`;
+            
+            window.renderCodeNotesList();
+        };
 
-        // --- REPORT GENERATION (MATCHING THE 4 SCREENSHOTS PERFECTLY) ---
-        function generateReport() {
+        window.renderCodeNotesList = function() {
+            let list = document.getElementById('codeNotesListContainer');
+            list.innerHTML = '';
+            if(window.codeNotes.length === 0) {
+                list.innerHTML = '<div style="padding:10px; color:#888;">No notes found.</div>';
+                return;
+            }
+            window.codeNotes.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt)).forEach(note => {
+                let div = document.createElement('div');
+                div.className = 'code-list-item ' + (window.currentEditingCodeId === note.id ? 'active' : '');
+                div.innerHTML = `<span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 180px;">${note.title}</span>
+                                 <span class="delete-icon" style="color:red; font-weight:bold; cursor:pointer; font-size: 14px; padding: 0 5px;" onclick="window.deleteCodeNote('${note.id}', event)">✖</span>`;
+                div.onclick = () => window.editCodeNote(note.id);
+                list.appendChild(div);
+            });
+        };
+
+        window.editCodeNote = function(id) {
+            let note = window.codeNotes.find(c => c.id === id);
+            if(note) {
+                window.currentEditingCodeId = id;
+                document.getElementById('codeTitle').value = note.title;
+                document.getElementById('codeContent').value = note.content;
+                window.renderCodeNotesList();
+            }
+        };
+
+        window.clearCodeForm = function(e) {
+            if(e && e.target) { e.target.classList.add('btn-shake'); setTimeout(() => e.target.classList.remove('btn-shake'), 100); }
+            window.currentEditingCodeId = null;
+            document.getElementById('codeTitle').value = '';
+            document.getElementById('codeContent').value = '';
+            window.renderCodeNotesList();
+        };
+
+        window.copyCodeContent = function(e) {
+            let btn = e ? e.target : null;
+            if(btn) { btn.classList.add('btn-shake'); setTimeout(() => btn.classList.remove('btn-shake'), 100); }
+            let text = document.getElementById('codeContent').value;
+            if(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    let originalText = btn.innerText;
+                    btn.innerText = "Copied!";
+                    setTimeout(() => btn.innerText = originalText, 1500);
+                }).catch(err => {
+                    alert("Failed to copy text!");
+                });
+            }
+        };
+
+        // --- NEW GLOBAL REPORT METHOD ---
+        window.openGlobalReport = function(e) {
+            if(e) e.stopPropagation();
+            closeAllMenus();
+            
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('workspace-area').style.display = 'flex';
+            
+            document.getElementById('infoRowSearch').style.display = 'none';
+            document.getElementById('infoRowStyles').style.display = 'none';
+            document.getElementById('activeStyleDetails').style.display = 'none';
+            document.getElementById('infoRowId').style.display = 'none';
+            document.getElementById('tabsHeaderContainer').style.display = 'none';
+            
+            document.getElementById('tab-book').style.display = 'none';
+            document.getElementById('tab-reports').style.display = 'none';
+            document.getElementById('tab-password').style.display = 'none';
+            document.getElementById('tab-code-vault').style.display = 'none';
+            
+            let gTab = document.getElementById('tab-global-reports');
+            gTab.style.display = 'flex';
+            gTab.style.borderTop = '1px solid #A0A0A0';
+            
+            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [Global Reports]`;
+        };
+
+        window.generateReport = function(event) {
+            let btn = (event && event.target) ? event.target : null;
+            if(btn) { btn.classList.add('btn-shake'); setTimeout(() => btn.classList.remove('btn-shake'), 100); }
+
             let type = document.getElementById('repSelectInput').value; 
             let dFromStr = document.getElementById('repStartDate').value; 
             let dToStr = document.getElementById('repEndDate').value; 
-            let floorInput = document.getElementById('repFloorInput').value.trim() || 'All'; 
-            let blockInput = document.getElementById('repBlockInput').value.trim() || 'All';
+            let floorInput = document.getElementById('repFloorInput').value.trim().toLowerCase(); 
+            let blockInput = document.getElementById('repBlockInput').value.trim().toLowerCase();
 
             const parseDate = (dStr) => {
                 if(!dStr) return null;
@@ -1456,28 +2043,45 @@
             let eDate = parseDate(dToStr);
 
             let rawData = window.rowsModel.filter(r => {
-                if (!r.workerName || !r.receiveQty || r.bookName !== window.currentProductionBook) return false;
-                let bSearch = blockInput.toLowerCase(); let fSearch = floorInput.toLowerCase();
-                if (bSearch !== 'all' && bSearch !== '' && !(r.blockNo && r.blockNo.toLowerCase().includes(bSearch))) return false;
-                if (fSearch !== 'all' && fSearch !== '' && !(r.floor && r.floor.toLowerCase().includes(fSearch))) return false;
-                let rDate = parseDate(r.receiveDate || r.issueDate);
+                if (!r.workerName || r.bookName !== window.currentProductionBook) return false;
+                if (type === '6_OpWiseIssueDetails') {
+                    if (r.receiveQty || r.rate || r.receiveDate || !r.issueQty) return false;
+                } else {
+                    if (!r.receiveQty) return false;
+                }
+                if (blockInput !== 'all' && blockInput !== '') {
+                    if (!(r.blockNo && r.blockNo.toLowerCase().includes(blockInput))) return false;
+                }
+                if (floorInput !== 'all' && floorInput !== '') {
+                    if (!(r.floor && r.floor.toLowerCase().includes(floorInput))) return false;
+                }
+                let rDate = null;
+                if (type === '6_OpWiseIssueDetails') { rDate = parseDate(r.issueDate); } 
+                else { rDate = parseDate(r.receiveDate || r.issueDate); }
+                
                 if (rDate) { if (sDate && rDate < sDate) return false; if (eDate && rDate > eDate) return false; } else { return false; } 
                 return true;
             });
 
             if (rawData.length === 0) { alert("No data found!"); return; }
+            window.processAndShowReport(rawData, type, dFromStr, dToStr, floorInput, window.currentProductionBook);
+        };
 
+        // SHARED FUNCTION FOR BOTH LOCAL AND GLOBAL REPORTS
+        window.processAndShowReport = function(rawData, type, dFromStr, dToStr, floorInput, sectionName) {
             let title = "Production Report"; 
             let theadHtml = ''; 
             let tbodyHtml = '';
+            let fullContentHtml = '';
 
-            // Report 1: All Employee Production Summery (Cross-tab Header, Single Total Row)
+            let printBtnHtml = (window.currentUser && window.currentUser.role === 'Admin') ? `<button class="btn-print" onclick="window.print()">Print Report</button>` : '';
+
             if (type === '1_StyleWise_Reports') {
                 title = "All Employee Production Summery";
                 let uniqueStyles = [];
                 let sumMap = {};
                 rawData.forEach(r => {
-                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
+                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === r.bookName);
                     let buyer = sObj ? sObj.buyer : 'Unknown';
                     let sKey = `${buyer}_${r.styleName}_${r.rate}`;
                     
@@ -1488,39 +2092,69 @@
                     sumMap[sKey] += (parseInt(r.receiveQty) || 0);
                 });
                 
+                uniqueStyles.sort((a, b) => a.buyer.localeCompare(b.buyer) || a.name.localeCompare(b.name) || a.rate.localeCompare(b.rate));
+
+                let buyerList = [];
+                let currentBuyer = null;
+                let buyerCount = 0;
+                uniqueStyles.forEach(s => {
+                    if (s.buyer === currentBuyer) {
+                        buyerCount++;
+                    } else {
+                        if (currentBuyer !== null) buyerList.push({ name: currentBuyer, span: buyerCount });
+                        currentBuyer = s.buyer;
+                        buyerCount = 1;
+                    }
+                });
+                if (currentBuyer !== null) buyerList.push({ name: currentBuyer, span: buyerCount });
+
+                let styleList = [];
+                let currentStyle = null;
+                let styleCount = 0;
+                uniqueStyles.forEach(s => {
+                    let bsKey = s.buyer + '|' + s.name;
+                    if (bsKey === currentStyle) {
+                        styleCount++;
+                    } else {
+                        if (currentStyle !== null) styleList.push({ name: currentStyle.split('|')[1], span: styleCount });
+                        currentStyle = bsKey;
+                        styleCount = 1;
+                    }
+                });
+                if (currentStyle !== null) styleList.push({ name: currentStyle.split('|')[1], span: styleCount });
+
                 theadHtml = `
                 <tr>
-                    <th rowspan="3" style="background: transparent; border-top: 10px solid #000;">BUYER</th>
-                    <th rowspan="3" style="background: transparent; border-top: 10px solid #000;">STYLE</th>
-                    <th rowspan="3" style="background: transparent; border-top: 10px solid #000;">RATE NAME</th>
-                    ${uniqueStyles.map(s => `<th style="background: transparent; border-top: 10px solid #000;">${s.buyer}</th>`).join('')}
-                    <th rowspan="3" style="background: transparent; border-top: 10px solid #000;">TOTAL</th>
-                    <th rowspan="3" style="background: transparent; border-top: 10px solid #000;">REMARKS</th>
+                    <th rowspan="3">BUYER</th>
+                    <th rowspan="3">STYLE</th>
+                    <th rowspan="3">RATE NAME</th>
+                    ${buyerList.map(b => `<th colspan="${b.span}">${b.name}</th>`).join('')}
+                    <th rowspan="3">TOTAL</th>
+                    <th rowspan="3">REMARKS</th>
                 </tr>
                 <tr>
-                    ${uniqueStyles.map(s => `<th style="background: transparent;">${s.name}</th>`).join('')}
+                    ${styleList.map(st => `<th colspan="${st.span}">${st.name}</th>`).join('')}
                 </tr>
                 <tr>
-                    ${uniqueStyles.map(s => `<th style="background: transparent;">${s.rate}</th>`).join('')}
+                    ${uniqueStyles.map(s => `<th>${s.rate}</th>`).join('')}
                 </tr>`;
                 
                 let gTotal = 0;
                 let cells = uniqueStyles.map(s => {
                     let q = sumMap[s.key] || 0;
                     gTotal += q;
-                    return `<td style="font-weight:bold; background: transparent;">${q}</td>`;
+                    return `<td style="font-weight:bold;">${q}</td>`;
                 }).join('');
                 
                 tbodyHtml = `<tr>
-                    <td style="background: transparent;"></td>
-                    <td style="background: transparent;"></td>
-                    <td style="font-weight:bold; background: transparent; text-align:center;">Total</td>
+                    <td></td>
+                    <td></td>
+                    <td style="font-weight:bold; text-align:center;">Total</td>
                     ${cells}
-                    <td style="font-weight:bold; background: transparent;">${gTotal}</td>
-                    <td style="background: transparent;"></td>
+                    <td style="font-weight:bold;">${gTotal}</td>
+                    <td></td>
                 </tr>`;
             }
-            // Report 4 (Top Sheet)
             else if (type === '4_Top_Sheet') {
                 title = "Production Top Sheet";
                 theadHtml = `<tr>
@@ -1534,7 +2168,7 @@
                 </tr>`;
                 let sumMap = {};
                 rawData.forEach(r => {
-                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
+                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === r.bookName);
                     let buyer = sObj ? sObj.buyer : 'Unknown';
                     let rObj = sObj ? sObj.rates.find(rt => rt.name === r.rate) : null;
                     let tk = rObj ? parseFloat(rObj.tk) || 0 : 0;
@@ -1542,20 +2176,41 @@
                     if(!sumMap[key]) sumMap[key] = { buyer, style: r.styleName, process: r.rate, rate: tk, qty: 0 };
                     sumMap[key].qty += (parseInt(r.receiveQty) || 0);
                 });
-                let sl = 1, tQ = 0, tA = 0;
-                Object.values(sumMap).forEach(row => {
-                    let amt = row.qty * row.rate;
-                    tbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left;">${row.buyer}</td><td style="text-align:left;">${row.style}</td><td>${row.process}</td><td>${row.qty}</td><td>${row.rate}</td><td>${amt.toFixed(0)}</td></tr>`;
-                    tQ += row.qty; tA += amt;
+                
+                let topsheetRows = Object.values(sumMap);
+                topsheetRows.sort((a, b) => a.buyer.localeCompare(b.buyer) || a.style.localeCompare(b.style) || a.process.localeCompare(b.process));
+                
+                let styleSpan = {};
+                topsheetRows.forEach(r => {
+                    let bsKey = r.buyer + '|' + r.style;
+                    styleSpan[bsKey] = (styleSpan[bsKey] || 0) + 1;
                 });
-                tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">GRAND TOTAL</td><td>${tQ}</td><td></td><td>${tA.toFixed(0)}</td></tr>`;
-            } 
-            // Report 5 (ColourWise Report)
+                
+                let sl = 1, tQ = 0, tA = 0;
+                let currentStyleKey = null;
+
+                topsheetRows.forEach(row => {
+                    let amt = row.qty * row.rate;
+                    tQ += row.qty; tA += amt;
+                    let bsKey = row.buyer + '|' + row.style;
+                    
+                    tbodyHtml += `<tr>`;
+                    if (bsKey !== currentStyleKey) {
+                        tbodyHtml += `<td rowspan="${styleSpan[bsKey]}">${sl++}</td>`;
+                        tbodyHtml += `<td rowspan="${styleSpan[bsKey]}" style="text-align:left; vertical-align:middle;">${row.buyer}</td>`;
+                        tbodyHtml += `<td rowspan="${styleSpan[bsKey]}" style="text-align:left; vertical-align:middle;">${row.style}</td>`;
+                        currentStyleKey = bsKey;
+                    }
+                    
+                    tbodyHtml += `<td>${row.process}</td><td>${row.qty}</td><td>${row.rate}</td><td>${amt.toFixed(0)}</td></tr>`;
+                });
+                tbodyHtml += `<tr style="font-weight:bold;"><td colspan="4" style="text-align:right;">GRAND TOTAL</td><td>${tQ}</td><td></td><td>${tA.toFixed(0)}</td></tr>`;
+            }
             else if (type === '5_ColourWise_Report') {
                 title = "ColourWise Report";
                 let report5Data = {};
                 rawData.forEach(r => {
-                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
+                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === r.bookName);
                     let buyer = sObj ? sObj.buyer : 'Unknown';
                     let style = r.styleName;
                     let color = r.color || 'N/A';
@@ -1593,69 +2248,211 @@
                             }
                             tbodyHtml += `<td>${color}</td><td style="font-weight:bold;">${qty}</td><td></td></tr>`;
                         });
-                        tbodyHtml += `<tr style="font-weight:bold; background:#F9F9F9;"><td colspan="3" style="text-align:right;">${style} Total</td><td>${styleTotal}</td><td></td></tr>`;
+                        tbodyHtml += `<tr style="font-weight:bold;"><td colspan="3" style="text-align:right;">${style} Total</td><td>${styleTotal}</td><td></td></tr>`;
                     }
                 }
-                tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="3" style="text-align:right;">GRAND TOTAL</td><td>${grandTotal}</td><td></td></tr>`;
+                tbodyHtml += `<tr style="font-weight:bold;"><td colspan="3" style="text-align:right;">GRAND TOTAL</td><td>${grandTotal}</td><td></td></tr>`;
             }
-            // Report 2 & 3 (Operator Wise Production Report - 2 Tiers grouped by Style)
+            else if (type === '6_OpWiseIssueDetails') {
+                title = "Operator Wise Issue Details";
+                theadHtml = `<tr>
+                    <th style="width: 40px;">SL No</th>
+                    <th>Name</th>
+                    <th>Mobile Number</th>
+                    <th>Block</th>
+                    <th>Style & Tc</th>
+                    <th>Total</th>
+                    <th>Remarks</th>
+                </tr>`;
+                let sl = 1;
+                let gTotal = 0;
+                rawData.forEach(r => {
+                    let qty = parseInt(r.issueQty) || 0;
+                    gTotal += qty;
+                    let styleAndTc = `${r.styleName} - ${r.idNo}`;
+                    tbodyHtml += `<tr>
+                        <td>${sl++}</td>
+                        <td style="text-align:left;">${r.workerName}</td>
+                        <td>${r.mobileNo}</td>
+                        <td>${r.blockNo}</td>
+                        <td>${styleAndTc}</td>
+                        <td>${qty}</td>
+                        <td></td>
+                    </tr>`;
+                });
+                tbodyHtml += `<tr style="font-weight:bold;">
+                    <td colspan="5" style="text-align:right;">GRAND TOTAL</td>
+                    <td>${gTotal}</td>
+                    <td></td>
+                </tr>`;
+            }
             else {
                 let isAmt = (type === '3_OpWiseProdDetail_Block_Amount');
                 title = "Operator Wise Production Report";
-                let empMap = {};
-                let uniqueStyles = [];
                 
+                let groups = {};
                 rawData.forEach(r => {
-                    let key = r.workerName;
-                    if(!empMap[key]) empMap[key] = { name: r.workerName, mobile: r.mobileNo, block: r.blockNo, styles: {} };
-                    
-                    let sKey = r.styleName; 
-                    if(!empMap[key].styles[sKey]) {
-                        empMap[key].styles[sKey] = { q: 0, amt: 0 };
-                    }
-                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === window.currentProductionBook);
-                    let rtObj = sObj ? sObj.rates.find(rt => rt.name === r.rate) : null;
-                    let tk = rtObj ? parseFloat(rtObj.tk) || 0 : 0;
-                    
-                    empMap[key].styles[sKey].q += (parseInt(r.receiveQty) || 0);
-                    empMap[key].styles[sKey].amt += ((parseInt(r.receiveQty) || 0) * tk);
-
-                    if(!uniqueStyles.find(x => x.key === sKey)) {
-                        uniqueStyles.push({ key: sKey, buyer: sObj ? sObj.buyer : 'Unknown', name: r.styleName });
-                    }
+                    let f = (r.floor || 'Unknown').trim();
+                    let b = (r.blockNo || 'Unknown').trim();
+                    let key = f + '|||' + b;
+                    if(!groups[key]) groups[key] = [];
+                    groups[key].push(r);
                 });
 
-                theadHtml = `
-                <tr>
-                    <th rowspan="2">SL</th>
-                    <th rowspan="2">NAME</th>
-                    <th rowspan="2">MOBILE NUMBER</th>
-                    <th rowspan="2">BLOCK</th>
-                    ${uniqueStyles.map(s => `<th>${s.buyer}</th>`).join('')}
-                    <th rowspan="2">TOTAL</th>
-                    ${isAmt ? `<th rowspan="2">AMOUNT</th>` : ''}
-                    <th rowspan="2">REMARKS</th>
-                </tr>
-                <tr>
-                    ${uniqueStyles.map(s => `<th>${s.name}</th>`).join('')}
-                </tr>`;
-
-                let sl = 1, gQ = 0, gA = 0;
-                Object.values(empMap).forEach(emp => {
-                    let rQ = 0, rA = 0;
-                    let cells = uniqueStyles.map(s => {
-                        let d = emp.styles[s.key];
-                        if(d) { rQ += d.q; rA += d.amt; return `<td>${d.q}</td>`; }
-                        return `<td></td>`;
-                    }).join('');
-                    tbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left; padding-left:5px;">${emp.name}</td><td>${emp.mobile}</td><td>${emp.block}</td>${cells}<td style="font-weight:bold;">${rQ}</td>${isAmt ? `<td style="font-weight:bold;">${rA.toFixed(0)}</td>` : ''}<td></td></tr>`;
-                    gQ += rQ; gA += rA;
+                let sortedKeys = Object.keys(groups).sort((k1, k2) => {
+                    let [f1, b1] = k1.split('|||');
+                    let [f2, b2] = k2.split('|||');
+                    return f1.localeCompare(f2) || b1.localeCompare(b2);
                 });
-                tbodyHtml += `<tr style="font-weight:bold; background:#F2F2F2;"><td colspan="4">TOTAL</td>${uniqueStyles.map(() => `<td></td>`).join('')}<td>${gQ}</td>${isAmt ? `<td>${gA.toFixed(0)}</td>` : ''}<td></td></tr>`;
+
+                sortedKeys.forEach((key, index) => {
+                    let [grpFloor, grpBlock] = key.split('|||');
+                    let grpData = groups[key];
+
+                    let empMap = {};
+                    let uniqueStyles = [];
+                    
+                    grpData.forEach(r => {
+                        let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === r.bookName);
+                        let buyer = sObj ? sObj.buyer : 'Unknown';
+                        let eKey = r.workerName;
+                        if(!empMap[eKey]) empMap[eKey] = { name: r.workerName, mobile: r.mobileNo, block: r.blockNo, floor: r.floor, styles: {} };
+                        
+                        let sKey = `${buyer}_${r.styleName}_${r.rate}`; 
+                        if(!empMap[eKey].styles[sKey]) {
+                            empMap[eKey].styles[sKey] = { q: 0, amt: 0 };
+                        }
+                        let rtObj = sObj ? sObj.rates.find(rt => rt.name === r.rate) : null;
+                        let tk = rtObj ? parseFloat(rtObj.tk) || 0 : 0;
+                        
+                        empMap[eKey].styles[sKey].q += (parseInt(r.receiveQty) || 0);
+                        empMap[eKey].styles[sKey].amt += ((parseInt(r.receiveQty) || 0) * tk);
+
+                        if(!uniqueStyles.find(x => x.key === sKey)) {
+                            uniqueStyles.push({ key: sKey, buyer: buyer, name: r.styleName, rate: r.rate });
+                        }
+                    });
+
+                    uniqueStyles.sort((a, b) => a.buyer.localeCompare(b.buyer) || a.name.localeCompare(b.name) || a.rate.localeCompare(b.rate));
+
+                    let buyerList = [];
+                    let currentBuyer = null;
+                    let buyerCount = 0;
+                    uniqueStyles.forEach(s => {
+                        if (s.buyer === currentBuyer) {
+                            buyerCount++;
+                        } else {
+                            if (currentBuyer !== null) buyerList.push({ name: currentBuyer, span: buyerCount });
+                            currentBuyer = s.buyer;
+                            buyerCount = 1;
+                        }
+                    });
+                    if (currentBuyer !== null) buyerList.push({ name: currentBuyer, span: buyerCount });
+
+                    let styleList = [];
+                    let currentStyle = null;
+                    let styleCount = 0;
+                    uniqueStyles.forEach(s => {
+                        let bsKey = s.buyer + '|' + s.name;
+                        if (bsKey === currentStyle) {
+                            styleCount++;
+                        } else {
+                            if (currentStyle !== null) styleList.push({ name: currentStyle.split('|')[1], span: styleCount });
+                            currentStyle = bsKey;
+                            styleCount = 1;
+                        }
+                    });
+                    if (currentStyle !== null) styleList.push({ name: currentStyle.split('|')[1], span: styleCount });
+
+                    let localTheadHtml = `
+                    <tr>
+                        <th rowspan="3">SL</th>
+                        <th rowspan="3">NAME</th>
+                        <th rowspan="3">MOBILE NUMBER</th>
+                        <th rowspan="3">BLOCK</th>
+                        ${buyerList.map(b => `<th colspan="${b.span}">${b.name}</th>`).join('')}
+                        <th rowspan="3">TOTAL</th>
+                        ${isAmt ? `<th rowspan="3">AMOUNT</th>` : ''}
+                        <th rowspan="3">REMARKS</th>
+                    </tr>
+                    <tr>
+                        ${styleList.map(st => `<th colspan="${st.span}">${st.name}</th>`).join('')}
+                    </tr>
+                    <tr>
+                        ${uniqueStyles.map(s => `<th>${s.rate}</th>`).join('')}
+                    </tr>`;
+
+                    let sl = 1, gQ = 0, gA = 0;
+                    let colTotals = {};
+                    uniqueStyles.forEach(s => colTotals[s.key] = { q: 0, amt: 0 });
+
+                    let localTbodyHtml = '';
+                    Object.values(empMap).forEach(emp => {
+                        let rQ = 0, rA = 0;
+                        let cells = uniqueStyles.map(s => {
+                            let d = emp.styles[s.key];
+                            if(d) { 
+                                rQ += d.q; rA += d.amt; 
+                                colTotals[s.key].q += d.q;
+                                return `<td>${d.q}</td>`; 
+                            }
+                            return `<td>0</td>`;
+                        }).join('');
+                        localTbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left; padding-left:5px;">${emp.name}</td><td>${emp.mobile}</td><td>${emp.block}</td>${cells}<td style="font-weight:bold;">${rQ}</td>${isAmt ? `<td style="font-weight:bold;">${rA.toFixed(0)}</td>` : ''}<td></td></tr>`;
+                        gQ += rQ; gA += rA;
+                    });
+                    localTbodyHtml += `<tr style="font-weight:bold;"><td colspan="4">TOTAL</td>${uniqueStyles.map(s => `<td>${colTotals[s.key].q}</td>`).join('')}<td>${gQ}</td>${isAmt ? `<td>${gA.toFixed(0)}</td>` : ''}<td></td></tr>`;
+
+                    let pageStyle = index > 0 ? "page-break-before: always; margin-top: 20px;" : "";
+                    
+                    fullContentHtml += `
+                    <div style="${pageStyle}">
+                        <div class="header-section">
+                            <div style="width: 120px;"></div>
+                            <div class="header-center">
+                                <h2>Matrix Sweaters Limited</h2>
+                                <h3>${title}</h3>
+                                <p>Floor : ${grpFloor} &nbsp;&nbsp; Block : ${grpBlock} &nbsp;&nbsp; Section: ${sectionName === 'All' ? 'All Sections' : sectionName}</p>
+                                <p>Date Range: ${dFromStr} to ${dToStr}</p>
+                            </div>
+                            <div style="width: 120px; display: flex; justify-content: flex-end;">
+                                ${index === 0 ? printBtnHtml : ''}
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="report-table">
+                                <thead>${localTheadHtml}</thead>
+                                <tbody>${localTbodyHtml}</tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                });
             }
 
-            // Exactly styled output mimicking the images (Centered, Shrink-to-fit Table width)
+            if (!fullContentHtml) {
+                fullContentHtml = `
+                <div class="header-section">
+                    <div style="width: 120px;"></div>
+                    <div class="header-center">
+                        <h2>Matrix Sweaters Limited</h2>
+                        <h3>${title}</h3>
+                        <p>Floor : ${floorInput || 'All'} &nbsp;&nbsp; Section: ${sectionName === 'All' ? 'All Sections' : sectionName}</p>
+                        <p>Date Range: ${dFromStr} to ${dToStr}</p>
+                    </div>
+                    <div style="width: 120px; display: flex; justify-content: flex-end;">
+                        ${printBtnHtml}
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="report-table">
+                        <thead>${theadHtml}</thead>
+                        <tbody>${tbodyHtml}</tbody>
+                    </table>
+                </div>`;
+            }
+
             let html = `<html><head><title>Matrix Report</title><style>
+                @page { size: A4; margin: 10mm; }
                 body { font-family: 'Arial', 'Tahoma', sans-serif; padding: 20px; color: #000; background: #fff; font-size: 11px; margin: 0; }
                 .header-section { display: flex; justify-content: space-between; align-items: flex-start; max-width: 1000px; margin: 0 auto 20px auto; }
                 .header-center { flex-grow: 1; text-align: center; }
@@ -1665,36 +2462,26 @@
                 .btn-print { background: #0078D7; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 12px; }
                 .btn-print:hover { background: #005A9E; }
                 .table-container { display: flex; justify-content: center; width: 100%; overflow-x: auto; }
-                .report-table { border-collapse: collapse; width: max-content; background: #fff; margin: 0 auto; }
-                .report-table th, .report-table td { border: 1px solid #000; padding: 5px 15px; font-size: 11px; text-align: center; white-space: nowrap; }
-                .report-table th { background: #E1E1E1; font-weight: bold; }
+                .report-table { border-collapse: collapse; width: max-content; background: transparent; margin: 0 auto; }
+                .report-table th, .report-table td { border: 1px solid #888 !important; padding: 5px 15px; font-size: 11px; text-align: center; white-space: nowrap; background: transparent !important; }
+                .report-table thead tr:first-child th { border-top: 10px solid #888 !important; }
+                .report-table th { font-weight: bold; }
+                tr { page-break-inside: avoid; }
                 @media print { 
                     .btn-print { display: none !important; } 
-                    body { padding: 0; }
+                    body { padding: 0; margin: 0; }
                     .header-section { max-width: 100%; margin-bottom: 10px; }
                 }
             </style></head><body>
-                <div class="header-section">
-                    <div style="width: 120px;"></div>
-                    <div class="header-center">
-                        <h2>Matrix Sweaters Limited</h2>
-                        <h3>${title}</h3>
-                        <p>Floor : ${floorInput} &nbsp;&nbsp; Section: ${window.currentProductionBook}</p>
-                        <p>Date Range: ${dFromStr} to ${dToStr}</p>
-                    </div>
-                    <div style="width: 120px; display: flex; justify-content: flex-end;">
-                        <button class="btn-print" onclick="window.print()">🖨️ Print Report</button>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <table class="report-table">
-                        <thead>${theadHtml}</thead>
-                        <tbody>${tbodyHtml}</tbody>
-                    </table>
-                </div>
+                ${fullContentHtml}
             </body></html>`;
-            let win = window.open('', '_blank');
-            win.document.write(html); win.document.close();
+            
+            let blob = new Blob([html], { type: 'text/html' });
+            let url = URL.createObjectURL(blob);
+            let win = window.open(url, '_blank');
+            if (!win) {
+                alert("Please allow popups to view the report.");
+            }
         }
     </script>
 </body>
