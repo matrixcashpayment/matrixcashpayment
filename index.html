@@ -102,7 +102,7 @@
         .banner-value { display: inline-block; min-width: 80px; padding: 0 5px; color: #1e395b; font-weight: bold; }
 
         /* Tabs */
-        .tabs { border-bottom: 1px solid #A0A0A0; display: flex; gap: 1px; margin-top: 5px; }
+        .tabs { border-bottom: 1px solid #A0A0A0; display: flex; gap: 1px; margin-top: 2px; } /* ADJUSTED TO BE CLOSER */
         .tab { background: #F0F0F0; border: 1px solid #A0A0A0; border-bottom: none; padding: 3px 12px; cursor: default; margin-bottom: -1px; }
         .tab.active { background: #FFF; border-top: 3px solid #0078D7; padding-top: 1px; margin-bottom: -1px; z-index: 2; height: 22px; font-weight: bold; }
         .tab-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -110,18 +110,30 @@
         /* Grid / Data Table */
         .grid-container { flex-grow: 1; background: #FFF; border: 1px solid #A0A0A0; border-top: none; overflow-y: scroll; display: block; height: 100px; scroll-behavior: smooth;}
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border: 1px solid #D5D5D5; padding: 2px 4px; text-align: center; cursor: default; height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; font-size: 10px; }
+        th, td { border: 1px solid #D5D5D5; padding: 2px 4px; text-align: center; cursor: default; height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; font-size: 11px; }
         th { background: #F0F0F0; border-right: 1px solid #C0C0C0; border-bottom: 1px solid #C0C0C0; font-weight: normal; position: sticky; top: 0; box-shadow: 0 1px 0 #999; z-index: 10; }
         tr:nth-child(even) { background-color: #F9F9F9; }
 
-        .grid-input { width: 100%; height: 100%; border: none !important; outline: none !important; background: transparent !important; text-align: center; font-family: 'Tahoma'; font-size: 10px; padding: 0; margin: 0; color: inherit; }
+        .grid-input { width: 100%; height: 100%; border: none !important; outline: none !important; background: transparent !important; text-align: center; font-family: 'Tahoma'; font-size: 11px; padding: 0; margin: 0; color: inherit; }
         .grid-input:focus { background-color: rgba(0, 120, 215, 0.1) !important; }
 
-        .locked-row { background-color: #E5F1FB !important; }
+        /* Locked Row now only blocks events, no background color override */
         .locked-row input, .locked-row select { pointer-events: none; color: #333; }
 
         .clickable-cell { cursor: pointer; color: #000; font-weight: bold; }
         .clickable-cell:hover { background-color: rgba(0, 120, 215, 0.1); }
+
+        /* Custom Column Colors for Data Table */
+        #dataTable tr:nth-child(even) { background-color: #FFF; }
+        #dataTable tr { background-color: #FFF; transition: background 0.2s; }
+        #dataTable td:nth-child(1), #dataTable td:nth-child(10) { background-color: #EAF2F8; } /* Issue Date, Receive Date - Beautiful Soft Slate Blue */
+        #dataTable td:nth-child(8), #dataTable td:nth-child(9) { background-color: #E8F5E9; } /* Rate, Receive Qty - Light Green */
+        #dataTable td:nth-child(6) { background-color: #E3F2FD; } /* Color - Light Blue */
+        #dataTable td:nth-child(4) { background-color: #F3E5F5; } /* Block No - Light Purple */
+        
+        /* Highlight Color ONLY when row is selected for Report 3 */
+        #dataTable tr.selected-report-row td { background-color: #E5F1FB !important; box-shadow: inset 0 0 1px #0078D7; }
+        #dataTable td.clickable-cell:hover { background-color: rgba(0, 120, 215, 0.1) !important; }
 
         select.grid-input { -webkit-appearance: none; -moz-appearance: none; appearance: none; cursor: pointer; }
         select.grid-input option { color: #000; background: #FFF; }
@@ -145,8 +157,8 @@
         .status-item { padding: 3px 8px; border-right: 1px solid #CCC; border-left: 1px solid #FFF; }
         .text-red { color: red; font-weight: bold; }
 
-        /* Login Screen */
-        #loginOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #008080; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        /* Login Screen - Updated with Home Screen beautiful gradient background */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(135deg, #f6f8fb 0%, #e5ebf4 100%); z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .login-box { background: #C0C0C0; border: 2px solid #FFF; border-right-color: #000; border-bottom-color: #000; width: 320px; display: flex; flex-direction: column; box-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
         .login-box .window-title-bar { background: #000080; color: white; padding: 4px 6px; font-weight: bold; font-size: 12px; }
         .login-content { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
@@ -342,25 +354,42 @@
                 <div id="defaultStylesList" style="display: flex; flex-wrap: wrap; gap: 5px; flex: 1; align-content: flex-start; overflow-y: auto;"></div>
             </div>
 
-            <div class="style-details-banner" id="activeStyleDetails">
-                 <span><span style="color:#666;">Buyer:</span> <span id="lblBuyer" class="banner-value"></span></span>
-                 <span><span style="color:#666;">Style:</span> <span id="lblStyle" class="banner-value" style="min-width: 120px;"></span></span>
-                 <span><span style="color:#666;">Rate:</span> <span id="lblRate" class="banner-value" style="min-width: 100px;"></span></span>
-                 <span><span style="color:#666;">Create Date:</span> <span id="lblDate" class="banner-value" style="min-width: 70px;"></span></span>
-            </div>
-
-            <div class="info-row" id="infoRowId" style="justify-content: space-between; align-items: flex-end; margin-bottom: 5px;">
-                <div style="display: flex; gap: 20px; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <label style="font-weight: bold; color: #1e395b;">Id No:</label>
-                        <input type="number" id="searchIdInput" name="disable_history_2" autocomplete="nope" placeholder="Start ID" style="width: 70px;" oninput="renderTable()" onkeydown="handleSearchIdEnter(event)">
-                        <span style="color: #666; font-weight: bold;" id="idRangeDisplay">(1-50)</span>
+            <!-- QUICK REPORT & STYLE WRAPPER AREA -->
+            <div id="quickReportWrapper" style="display: flex; justify-content: space-between; border-top: 1px solid #1e395b; margin-top: 5px;">
+                <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div class="style-details-banner" id="activeStyleDetails" style="border-top: none; margin-top: 0; padding-top: 6px; margin-bottom: 2px;">
+                         <span><span style="color:#666;">Buyer:</span> <span id="lblBuyer" class="banner-value"></span></span>
+                         <span><span style="color:#666;">Style:</span> <span id="lblStyle" class="banner-value" style="min-width: 120px;"></span></span>
+                         <span><span style="color:#666;">Rate:</span> <span id="lblRate" class="banner-value" style="min-width: 100px;"></span></span>
+                         <span><span style="color:#666;">Create Date:</span> <span id="lblDate" class="banner-value" style="min-width: 70px;"></span></span>
                     </div>
+
+                    <!-- ID No Layout Adjusted properly upwards -->
+                    <div class="info-row" id="infoRowId" style="justify-content: flex-start; align-items: flex-end; margin-top: -8px; margin-bottom: 5px; padding-left: 10px;">
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <label style="font-weight: bold; color: #1e395b;">Id No:</label>
+                                <input type="number" id="searchIdInput" name="disable_history_2" autocomplete="nope" placeholder="Start ID" style="width: 70px;" oninput="renderTable()" onkeydown="handleSearchIdEnter(event)">
+                                <span style="color: #666; font-weight: bold;" id="idRangeDisplay">(1-50)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="quickReportControls" style="padding: 8px 10px 5px 10px; display: flex; flex-direction: column; align-items: flex-start; width: 280px; flex-shrink: 0;">
+                    <label style="font-weight: bold; margin-bottom: 2px; color: #333;">Report Name:</label>
+                    <select id="quickRepSelectInput" style="width: 100%; margin-bottom: 5px;">
+                        <option value="5_ColourWise_Report_All" selected>1. ColourWise Report All Floor</option>
+                        <option value="5_ColourWise_Report">2. ColourWise Report</option>
+                        <option value="3_Operator_Wise_Production">3. Operator Wise Production</option>
+                        <option value="6_OpWiseIssueDetails">4. Operator Wise Issue Details</option>
+                    </select>
+                    <button style="width: 65px;" onclick="window.generateQuickReport(event)">Show</button>
                 </div>
             </div>
 
-            <!-- TABS HEADER -->
-            <div class="tabs" id="tabsHeaderContainer">
+            <!-- TABS HEADER CLOSER TO ID NO -->
+            <div class="tabs" id="tabsHeaderContainer" style="margin-top: 0px;">
                 <div class="tab active" id="tab-btn-book" onclick="switchTab('Book')">Book</div>
                 <div class="tab" id="tab-btn-reports" onclick="switchTab('Reports')">Reports</div>
             </div>
@@ -405,8 +434,8 @@
                         <label>Report Name:</label>
                         <select id="repSelectInput" style="width: 320px;">
                             <option value="1_StyleWise_Reports">1. All Employee Production Summery</option>
-                            <option value="2_OpWiseProdDetail_Block">2. Operator wise production detail</option>
-                            <option value="3_OpWiseProdDetail_Block_Amount">3. Operator wise production detail (Amount)</option>
+                            <option value="2_OpWiseProdDetail_Block">2. Operator wise production detail (Old)</option>
+                            <option value="3_Operator_Wise_Production">3. Operator Wise Production</option>
                             <option value="4_Top_Sheet">4. Top Sheet</option>
                             <option value="5_ColourWise_Report">5. ColourWise Report</option>
                             <option value="6_OpWiseIssueDetails">6. Operator Wise Issue Details</option>
@@ -452,8 +481,8 @@
                         <label>Report Name:</label>
                         <select id="gRepSelectInput" style="width: 320px;">
                             <option value="1_StyleWise_Reports">1. All Employee Production Summery</option>
-                            <option value="2_OpWiseProdDetail_Block">2. Operator wise production detail</option>
-                            <option value="3_OpWiseProdDetail_Block_Amount">3. Operator wise production detail (Amount)</option>
+                            <option value="2_OpWiseProdDetail_Block">2. Operator wise production detail (Old)</option>
+                            <option value="3_Operator_Wise_Production">3. Operator Wise Production</option>
                             <option value="4_Top_Sheet">4. Top Sheet</option>
                             <option value="5_ColourWise_Report">5. ColourWise Report</option>
                             <option value="6_OpWiseIssueDetails">6. Operator Wise Issue Details</option>
@@ -704,6 +733,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // EXPOSE DB FETCH FUNCTION TO WINDOW FOR QUICK REPORT TO USE
+        window.dbFetchBookData = async function(bookName) {
+            const q = query(collection(db, "production"), where("bookName", "==", bookName));
+            const snap = await getDocs(q);
+            return snap.docs.map(d => d.data());
+        };
+
         // --- Global variables ---
         window.usersModel = [];
         window.styles = [];
@@ -716,12 +752,25 @@
         window.currentProductionBook = "";
         window.currentAdminBook = "LINKING";
         window.currentEditingStyleIndex = -1;
-        window.editingUser = null; // User Edit Tracking
+        window.editingUser = null; 
+        window.selectedReportWorker = null; 
+        window.selectedReportRowId = null; // Used strictly to track which exact row's date was clicked
 
         // Helper for shaking removal buttons cleanly
         window.shakeAndRemove = function(element) {
             element.classList.add('btn-shake');
             setTimeout(() => { if(element.parentElement) element.parentElement.remove(); }, 100);
+        };
+
+        // Select Operator Row Logic
+        window.selectWorkerRow = function(name, idNo, trEl) {
+            if(!name) return;
+            window.selectedReportWorker = name;
+            window.selectedReportRowId = idNo;
+            document.querySelectorAll('#dataTable tr').forEach(r => {
+                r.classList.remove('selected-report-row');
+            });
+            if(trEl) trEl.classList.add('selected-report-row');
         };
 
         // --- Database Sync Functions ---
@@ -966,6 +1015,11 @@
         };
 
         window.fetchRowsForStyle = async function() {
+            // ALWAYS completely clear selected report marks on newly entered styles!
+            window.selectedReportWorker = null; 
+            window.selectedReportRowId = null;
+            document.querySelectorAll('#dataTable tr').forEach(r => r.classList.remove('selected-report-row'));
+            
             const q = query(collection(db, "production"), 
                       where("bookName", "==", window.currentProductionBook),
                       where("styleName", "==", window.activeStyleName));
@@ -1002,8 +1056,7 @@
             
             document.getElementById('infoRowSearch').style.display = 'flex';
             document.getElementById('infoRowStyles').style.display = 'flex';
-            document.getElementById('activeStyleDetails').style.display = 'flex';
-            document.getElementById('infoRowId').style.display = 'flex';
+            document.getElementById('quickReportWrapper').style.display = 'flex';
             document.getElementById('tabsHeaderContainer').style.display = 'flex';
             
             document.getElementById('tab-password').style.display = 'none';
@@ -1024,6 +1077,12 @@
 
         window.setActiveStyle = async function(name) {
             window.activeStyleName = name;
+            
+            // Clear mark when changing style locally
+            window.selectedReportWorker = null;
+            window.selectedReportRowId = null;
+            document.querySelectorAll('#dataTable tr').forEach(r => r.classList.remove('selected-report-row'));
+
             let activeStyleObj = window.styles.find(s => s.styleName === name && s.bookName === window.currentProductionBook);
             if(activeStyleObj) {
                 document.getElementById('lblBuyer').innerText = activeStyleObj.buyer;
@@ -1196,6 +1255,8 @@
                 
                 if (type === '6_OpWiseIssueDetails') {
                     if (r.receiveQty || r.rate || r.receiveDate || !r.issueQty) return false;
+                } else if (type === '3_Operator_Wise_Production') {
+                    if (!r.receiveQty && !r.issueQty) return false;
                 } else {
                     if (!r.receiveQty) return false;
                 }
@@ -1220,7 +1281,8 @@
 
             if (rawData.length === 0) { alert("No data found for the selected criteria!"); return; }
 
-            window.processAndShowReport(rawData, type, dFromStr, dToStr, floorInput, sectionInput);
+            // Pass true for isGlobal to trigger pagination logic
+            window.processAndShowReport(rawData, type, dFromStr, dToStr, floorInput, sectionInput, true);
         };
     </script>
 
@@ -1324,9 +1386,13 @@
             let toShow = filteredByStyleAndBook.slice(startIndex, startIndex + 50);
 
             toShow.forEach(row => {
-                let tr = document.createElement("tr"); tr.id = 'row-' + row.idNo; 
+                let tr = document.createElement("tr"); 
+                tr.id = 'row-' + row.idNo; 
                 if(!!row.receiveQty && window.currentUser.role !== 'Admin') tr.classList.add('locked-row');
                 
+                // ADDED ROW CLICK LOGIC FOR REPORT 3 EXACT ROW MATCH
+                tr.onclick = function() { window.selectWorkerRow(row.workerName, row.idNo, tr); };
+
                 let displayReceiveQty = (row.receiveQty === '0' || row.receiveQty === 0 || !row.receiveQty) ? '' : row.receiveQty;
                 let displayRate = (displayReceiveQty !== '') ? (row.rate || '') : '';
 
@@ -1335,7 +1401,7 @@
                     <td style="padding:0;"><input type="text" class="grid-input name-input" autocomplete="nope" spellcheck="false" value="${row.workerName || ''}" oninput="handleNameInput(${row.idNo}, this, event)" onchange="window.updateModel(${row.idNo}, 'workerName', this.value)" onkeydown="handleGenericEnter(event, this, 'mobile-input')"></td>
                     <td style="padding:0;"><input type="text" class="grid-input mobile-input" autocomplete="nope" spellcheck="false" value="${row.mobileNo || ''}" onchange="window.updateModel(${row.idNo}, 'mobileNo', this.value)" onkeydown="handleGenericEnter(event, this, 'block-input')"></td>
                     <td style="padding:0;"><input type="text" class="grid-input block-input" autocomplete="nope" spellcheck="false" value="${row.blockNo || ''}" onchange="window.updateModel(${row.idNo}, 'blockNo', this.value)" onkeydown="handleGenericEnter(event, this, 'color-input')"></td>
-                    <td style="background:#F9F9F9; font-weight:bold; color:#555; font-size:10px;">${row.idNo}</td>
+                    <td style="background:#F9F9F9; font-weight:bold; color:#555; font-size:11px;">${row.idNo}</td>
                     
                     <td style="padding:0;" class="clickable-cell" onclick="openColorPopup(${row.idNo}, this.querySelector('input'), event)">
                         <input type="text" class="grid-input color-input" autocomplete="nope" spellcheck="false" readonly value="${row.color || ''}" onkeydown="handleColorKey(event, ${row.idNo}, this)" style="color: #000;">
@@ -1608,6 +1674,7 @@
             }, 100);
         }
 
+        // ================== FIXED ISSUE DATE TO NAME FIELD NAVIGATION ==================
         function handleDateKey(e, input, next, idNo, field) {
             if(e.key === '+') { 
                 e.preventDefault(); 
@@ -1616,30 +1683,39 @@
             else if(e.key === 'Enter') {
                 e.preventDefault();
                 let picker = document.getElementById('customDatePicker');
-                let trIdStr = input.closest('tr').id;
                 
+                let proceedToNext = () => {
+                    let currentTr = document.getElementById('row-' + idNo);
+                    if (currentTr) {
+                        if(next === 'next-row') { 
+                            let nextTr = currentTr.nextElementSibling; 
+                            if(nextTr) {
+                                let nextIssueDate = nextTr.querySelector('.issue-date-input');
+                                if(nextIssueDate) nextIssueDate.focus(); 
+                            }
+                        } else { 
+                            let nextEl = currentTr.querySelector('.'+next);
+                            if(nextEl) nextEl.focus(); 
+                        }
+                    }
+                };
+
                 if (picker.style.display === 'flex') {
                     window.saveCalendarDate(); 
+                    setTimeout(proceedToNext, 150); // Wait for the 100ms timeout in saveCalendarDate
                 } else {
                     if(!input.value) { 
                         let d = new Date(); 
                         input.value = ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear(); 
                         window.updateModel(idNo, field, input.value); 
                     }
-                }
-
-                let currentTr = document.getElementById(trIdStr);
-                if (currentTr) {
-                    if(next === 'next-row') { 
-                        let nextTr = currentTr.nextElementSibling; 
-                        if(nextTr) nextTr.querySelector('.issue-date-input').focus(); 
-                    } else { 
-                        let nextEl = currentTr.querySelector('.'+next);
-                        if(nextEl) nextEl.focus(); 
-                    }
+                    // Proper blur triggers the onchange async update without breaking the UI flow
+                    input.blur();
+                    setTimeout(proceedToNext, 50); // Tiny delay allows UI to settle before focusing next input
                 }
             }
         }
+
         function handleGenericEnter(e, input, next) { 
             if(e.key === 'Enter') { 
                 e.preventDefault(); 
@@ -1853,8 +1929,7 @@
             
             document.getElementById('infoRowSearch').style.display = 'none';
             document.getElementById('infoRowStyles').style.display = 'none';
-            document.getElementById('activeStyleDetails').style.display = 'none';
-            document.getElementById('infoRowId').style.display = 'none';
+            document.getElementById('quickReportWrapper').style.display = 'none';
             document.getElementById('tabsHeaderContainer').style.display = 'none';
             
             document.getElementById('tab-book').style.display = 'none';
@@ -1930,8 +2005,7 @@
             
             document.getElementById('infoRowSearch').style.display = 'none';
             document.getElementById('infoRowStyles').style.display = 'none';
-            document.getElementById('activeStyleDetails').style.display = 'none';
-            document.getElementById('infoRowId').style.display = 'none';
+            document.getElementById('quickReportWrapper').style.display = 'none';
             document.getElementById('tabsHeaderContainer').style.display = 'none';
             
             document.getElementById('tab-book').style.display = 'none';
@@ -2007,8 +2081,7 @@
             
             document.getElementById('infoRowSearch').style.display = 'none';
             document.getElementById('infoRowStyles').style.display = 'none';
-            document.getElementById('activeStyleDetails').style.display = 'none';
-            document.getElementById('infoRowId').style.display = 'none';
+            document.getElementById('quickReportWrapper').style.display = 'none';
             document.getElementById('tabsHeaderContainer').style.display = 'none';
             
             document.getElementById('tab-book').style.display = 'none';
@@ -2030,6 +2103,7 @@
             let type = document.getElementById('repSelectInput').value; 
             let dFromStr = document.getElementById('repStartDate').value; 
             let dToStr = document.getElementById('repEndDate').value; 
+            let sectionInput = document.getElementById('gRepSection').value;
             let floorInput = document.getElementById('repFloorInput').value.trim().toLowerCase(); 
             let blockInput = document.getElementById('repBlockInput').value.trim().toLowerCase();
 
@@ -2044,11 +2118,15 @@
 
             let rawData = window.rowsModel.filter(r => {
                 if (!r.workerName || r.bookName !== window.currentProductionBook) return false;
+                
                 if (type === '6_OpWiseIssueDetails') {
                     if (r.receiveQty || r.rate || r.receiveDate || !r.issueQty) return false;
+                } else if (type === '3_Operator_Wise_Production') {
+                    if (!r.receiveQty && !r.issueQty) return false;
                 } else {
                     if (!r.receiveQty) return false;
                 }
+                
                 if (blockInput !== 'all' && blockInput !== '') {
                     if (!(r.blockNo && r.blockNo.toLowerCase().includes(blockInput))) return false;
                 }
@@ -2064,11 +2142,157 @@
             });
 
             if (rawData.length === 0) { alert("No data found!"); return; }
-            window.processAndShowReport(rawData, type, dFromStr, dToStr, floorInput, window.currentProductionBook);
+            window.processAndShowReport(rawData, type, dFromStr, dToStr, floorInput, window.currentProductionBook, false);
+        };
+
+        window.generateQuickReport = async function(event) {
+            let btn = (event && event.target) ? event.target : null;
+            if(btn) { btn.classList.add('btn-shake'); setTimeout(() => btn.classList.remove('btn-shake'), 100); }
+
+            let rawType = document.getElementById('quickRepSelectInput').value; 
+            let type = rawType;
+            let floorInput = (window.currentUser && window.currentUser.role !== 'Admin') ? window.currentUser.floor.toLowerCase() : 'all';
+
+            // Floor filtering logic
+            if (rawType === '5_ColourWise_Report_All') {
+                type = '5_ColourWise_Report';
+                floorInput = 'all';
+            } else if (rawType === '5_ColourWise_Report') {
+                floorInput = (window.currentUser && window.currentUser.floor) ? window.currentUser.floor.toLowerCase() : 'all';
+            } else if (rawType === '2_OpWiseProdDetail_Block') {
+                type = '2_OpWiseProdDetail_Block';
+            } else if (rawType === '6_OpWiseIssueDetails') {
+                type = '6_OpWiseIssueDetails';
+            } else if (rawType === '3_Operator_Wise_Production') {
+                type = '3_Operator_Wise_Production';
+            }
+
+            if (!window.activeStyleName && type !== '3_Operator_Wise_Production') {
+                alert("Please select a style first!");
+                return;
+            }
+
+            // ==========================================
+            // EXCLUSIVE LOGIC FOR TYPE 3 QUICK REPORT
+            // ==========================================
+            if (type === '3_Operator_Wise_Production') {
+                if (!window.selectedReportWorker || !window.selectedReportRowId) {
+                    alert("Please click on an operator's row first to view their specific report!");
+                    return;
+                }
+                
+                let selectedRow = window.rowsModel.find(r => r.idNo === window.selectedReportRowId);
+                if (!selectedRow) {
+                    alert("Selected row data not found."); return;
+                }
+                let startDateStr = selectedRow.issueDate;
+                let endDateStr = selectedRow.receiveDate || startDateStr; 
+                
+                if (!startDateStr) {
+                    alert("The selected row does not have an Issue Date!");
+                    return;
+                }
+
+                // Fetch ALL rows for current book directly from Firestore via module helper
+                let allData = [];
+                try {
+                    allData = await window.dbFetchBookData(window.currentProductionBook);
+                } catch(err) {
+                    alert("Failed to fetch data from Database!"); return;
+                }
+
+                const parseDate = (dStr) => {
+                    if(!dStr) return null;
+                    const [d, m, y] = dStr.split('/');
+                    return new Date(y, m - 1, d);
+                };
+
+                let sDate = parseDate(startDateStr); 
+                let eDate = parseDate(endDateStr);
+                
+                // Ensure chronological order for reliable range check
+                let minDate = sDate < eDate ? sDate : eDate;
+                let maxDate = sDate > eDate ? sDate : eDate;
+
+                let rawData = allData.filter(r => {
+                    if (r.workerName !== window.selectedReportWorker) return false;
+                    if (!r.receiveQty || parseInt(r.receiveQty) <= 0) return false;
+
+                    let rDate = parseDate(r.receiveDate);
+                    // Fallback to issue date if no receive date exists
+                    if (!rDate) rDate = parseDate(r.issueDate);
+                    if (!rDate) return false;
+                    
+                    if (rDate >= minDate && rDate <= maxDate) return true;
+                    return false;
+                });
+
+                if (rawData.length === 0) { 
+                    alert("No receives found for this operator in the specified date range (" + startDateStr + " to " + endDateStr + ")!"); 
+                    return; 
+                }
+
+                window.processAndShowReport(rawData, type, startDateStr, endDateStr, floorInput === 'all' ? 'All Floors' : floorInput, window.currentProductionBook, false);
+                return;
+            }
+            
+            // ==========================================
+            // NORMAL LOGIC FOR OTHER TYPES (1, 2, 4, 5, 6)
+            // ==========================================
+            let rawData = window.rowsModel.filter(r => {
+                if (!r.workerName || r.bookName !== window.currentProductionBook) return false;
+                
+                if (r.styleName !== window.activeStyleName) return false;
+                
+                if (type === '6_OpWiseIssueDetails') {
+                    if (r.receiveQty || r.rate || r.receiveDate || !r.issueQty) return false;
+                } else {
+                    if (!r.receiveQty || parseInt(r.receiveQty) <= 0) return false;
+                }
+                
+                if (floorInput !== 'all' && floorInput !== '') {
+                    if (!(r.floor && r.floor.toLowerCase().includes(floorInput))) return false;
+                }
+                
+                return true;
+            });
+
+            if (rawData.length === 0) { 
+                alert("No data found for this selection on the selected floor!"); 
+                return; 
+            }
+
+            // Extract exact date range for report header (Issue Date to Receive Date)
+            let minDate = null, maxDate = null;
+            const parseD = (dStr) => {
+                if(!dStr) return null;
+                let parts = dStr.split('/');
+                if(parts.length===3) return new Date(parts[2], parts[1]-1, parts[0]);
+                return null;
+            };
+            
+            let repData = rawData;
+            if (type === '3_Operator_Wise_Production' && window.selectedReportWorker) {
+                repData = rawData.filter(r => r.workerName === window.selectedReportWorker);
+            }
+            
+            repData.forEach(r => {
+                let idate = parseD(r.issueDate);
+                let rdate = parseD(r.receiveDate);
+                if(idate) { if(!minDate || idate < minDate) minDate = idate; }
+                if(rdate) { if(!maxDate || rdate > maxDate) maxDate = rdate; }
+            });
+            
+            const formatD = (d) => d ? ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear() : "N/A";
+            
+            let dFromStrCalc = formatD(minDate);
+            let dToStrCalc = formatD(maxDate);
+
+            window.processAndShowReport(rawData, type, dFromStrCalc, dToStrCalc, floorInput === 'all' ? 'All Floors' : floorInput, window.currentProductionBook, false);
         };
 
         // SHARED FUNCTION FOR BOTH LOCAL AND GLOBAL REPORTS
-        window.processAndShowReport = function(rawData, type, dFromStr, dToStr, floorInput, sectionName) {
+        window.processAndShowReport = function(rawData, type, dFromStr, dToStr, floorInput, sectionName, isGlobal = false) {
             let title = "Production Report"; 
             let theadHtml = ''; 
             let tbodyHtml = '';
@@ -2076,7 +2300,174 @@
 
             let printBtnHtml = (window.currentUser && window.currentUser.role === 'Admin') ? `<button class="btn-print" onclick="window.print()">Print Report</button>` : '';
 
-            if (type === '1_StyleWise_Reports') {
+            // ================== NEW OPERATOR WISE PRODUCTION (MODEL 3) ==================
+            if (type === '3_Operator_Wise_Production') {
+                title = "Operator Wise Production Report";
+                
+                let workersMap = {};
+                rawData.forEach(r => {
+                    if(!r.workerName) return;
+                    if(!workersMap[r.workerName]) {
+                        workersMap[r.workerName] = {
+                            mobileNo: r.mobileNo || '',
+                            blockNo: r.blockNo || '',
+                            floor: r.floor || '',
+                            records: [],
+                            totalProd: 0,
+                            totalTaka: 0
+                        };
+                    }
+                    let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === r.bookName);
+                    let tk = 0;
+                    if(sObj && sObj.rates) {
+                        let rtObj = sObj.rates.find(rt => rt.name === r.rate);
+                        if(rtObj) tk = parseFloat(rtObj.tk) || 0;
+                    }
+                    let rQty = parseInt(r.receiveQty) || 0;
+                    let amt = rQty * tk;
+                    
+                    workersMap[r.workerName].records.push({...r, tk: tk, amt: amt, buyer: sObj ? sObj.buyer : 'Unknown'});
+                    workersMap[r.workerName].totalProd += rQty;
+                    workersMap[r.workerName].totalTaka += amt;
+                });
+
+                let opIndex = 0;
+                for (let wName in workersMap) {
+                    let wData = workersMap[wName];
+                    
+                    // Group by Style
+                    let stylesMap = {};
+                    wData.records.forEach(r => {
+                        let sKey = r.styleName + '|' + r.buyer;
+                        if(!stylesMap[sKey]) stylesMap[sKey] = [];
+                        stylesMap[sKey].push(r);
+                    });
+
+                    let pageStyle = opIndex > 0 ? "page-break-before: always; margin-top: 20px;" : "";
+                    
+                    let localHtml = `
+                    <div style="${pageStyle} font-family: 'Tahoma', sans-serif;">
+                        <div style="text-align: center; margin-bottom: 10px;">
+                            <h2 style="margin: 0; font-size: 16px;">Matrix Sweaters Limited</h2>
+                            <p style="margin: 2px 0; font-size: 10px;">Hajir Pukur, Choydana, Gazipur, Bangladesh</p>
+                            <p style="margin: 5px 0; font-size: 12px; font-weight: bold;">Employee's Monthly Production Card, DateRange: ${dFromStr} to ${dToStr}</p>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 5px; width: max-content; margin-left: auto; margin-right: auto; min-width: 600px;">
+                            ${(opIndex === 0 && window.currentUser && window.currentUser.role === 'Admin') ? printBtnHtml : ''}
+                        </div>
+
+                        <table style="width: max-content; min-width: 600px; margin: 0 auto 5px auto; border-collapse: collapse; background: transparent; border: 1px solid #000; font-size: 11px;">
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 4px;"><b>Section:</b> ${sectionName}</td>
+                                <td style="border: 1px solid #000; padding: 4px;"><b>Mobile Number:</b> ${wData.mobileNo}</td>
+                                <td style="border: 1px solid #000; padding: 4px;"><b>Report Date:</b> ${dFromStr} to ${dToStr}</td>
+                                <td style="border: 1px solid #000; padding: 4px;"><b>Floor:</b> ${wData.floor}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #000; padding: 4px;"><b>Block:</b> ${wData.blockNo}</td>
+                                <td style="border: 1px solid #000; padding: 4px;"><b>Name:</b> ${wName}</td>
+                                <td style="border: 1px solid #000; padding: 4px;"><b>Total Production:</b> ${wData.totalProd}</td>
+                                <td style="border: 1px solid #000; padding: 4px;"><b>Taka:</b> ${Math.round(wData.totalTaka)}</td>
+                            </tr>
+                        </table>
+
+                        <table style="width: max-content; min-width: 600px; margin: 0 auto; border-collapse: collapse; border: 1px solid #000; font-size: 11px; text-align: center;">
+                            <thead>
+                                <tr style="background-color: #B4C6E7;">
+                                    <th style="border: 1px solid #000; padding: 4px;">Issues Date</th>
+                                    <th style="border: 1px solid #000; padding: 4px;">ID No</th>
+                                    <th style="border: 1px solid #000; padding: 4px;">Color</th>
+                                    <th style="border: 1px solid #000; padding: 4px;">Rate Name</th>
+                                    <th style="border: 1px solid #000; padding: 4px;">Issue Qty</th>
+                                    <th style="border: 1px solid #000; padding: 4px;">Receive Qty</th>
+                                    <th style="border: 1px solid #000; padding: 4px;">Amount</th>
+                                    <th style="border: 1px solid #000; padding: 4px;">Receive Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    let grandIss = 0, grandRec = 0, grandAmt = 0;
+
+                    for (let sKey in stylesMap) {
+                        let [sName, sBuyer] = sKey.split('|');
+                        let sRecords = stylesMap[sKey];
+                        
+                        let ratesWithTk = [...new Set(sRecords.map(r => `${r.rate} (${r.tk}Tk)`))].filter(Boolean).join(', ');
+
+                        localHtml += `
+                                <tr style="background-color: #D9E1F2; font-weight: bold;">
+                                    <td colspan="8" style="border: 1px solid #000; padding: 4px; text-align: left;">
+                                        <span style="margin-right: 50px;">Buyer: ${sBuyer}</span>
+                                        <span style="margin-right: 50px;">Style: ${sName}</span>
+                                        <span>Rate: ${ratesWithTk}</span>
+                                    </td>
+                                </tr>
+                        `;
+
+                        let sIss = 0, sRec = 0, sAmt = 0;
+                        sRecords.forEach(r => {
+                            let iq = parseInt(r.issueQty) || 0;
+                            let rq = parseInt(r.receiveQty) || 0;
+                            sIss += iq; sRec += rq; sAmt += r.amt;
+                            grandIss += iq; grandRec += rq; grandAmt += r.amt;
+
+                            localHtml += `
+                                <tr>
+                                    <td style="border: 1px solid #000; padding: 4px;">${r.issueDate || ''}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${r.idNo || ''}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${r.color || ''}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${r.rate || ''}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${iq}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${rq}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${Math.round(r.amt)}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${r.receiveDate || ''}</td>
+                                </tr>
+                            `;
+                        });
+
+                        localHtml += `
+                                <tr style="background-color: #F8FDF2; font-weight: bold;">
+                                    <td colspan="4" style="border: 1px solid #000; padding: 4px; text-align: right;">Style Total (Target + NonTarget)</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${sIss}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${sRec}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${Math.round(sAmt)}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;"></td>
+                                </tr>
+                        `;
+                    }
+
+                    localHtml += `
+                                <tr style="background-color: #F8FDF2; font-weight: bold;">
+                                    <td colspan="4" style="border: 1px solid #000; padding: 4px; text-align: right;">ALL STYLE TOTAL (Target + NonTarget)</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${grandIss}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${grandRec}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">${Math.round(grandAmt)}</td>
+                                    <td style="border: 1px solid #000; padding: 4px;"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div style="display: flex; justify-content: space-between; margin: 50px auto 0 auto; width: max-content; min-width: 600px; font-weight: bold; font-size: 11px; gap: 40px;">
+                            <div style="border-top: 1px solid #000; width: 100px; text-align: center; padding-top: 5px;">Worker</div>
+                            <div style="border-top: 1px solid #000; width: 100px; text-align: center; padding-top: 5px;">Data Entry</div>
+                            <div style="border-top: 1px solid #000; width: 100px; text-align: center; padding-top: 5px;">In-Charge</div>
+                            <div style="border-top: 1px solid #000; width: 100px; text-align: center; padding-top: 5px;">P.M</div>
+                            <div style="border-top: 1px solid #000; width: 100px; text-align: center; padding-top: 5px;">P.D</div>
+                        </div>
+                    </div>
+                    `;
+                    fullContentHtml += localHtml;
+                    opIndex++;
+                }
+
+                if(!fullContentHtml) {
+                    alert("No data available for the selected parameters!"); return;
+                }
+            }
+            // ================== OTHER REPORTS (1, 2, 4, 5, 6) ==================
+            else if (type === '1_StyleWise_Reports') {
                 title = "All Employee Production Summery";
                 let uniqueStyles = [];
                 let sumMap = {};
@@ -2287,35 +2678,163 @@
                 </tr>`;
             }
             else {
-                let isAmt = (type === '3_OpWiseProdDetail_Block_Amount');
+                // TYPE 2 handling (Old Op Wise Production)
+                let isAmt = false;
                 title = "Operator Wise Production Report";
-                
-                let groups = {};
-                rawData.forEach(r => {
-                    let f = (r.floor || 'Unknown').trim();
-                    let b = (r.blockNo || 'Unknown').trim();
-                    let key = f + '|||' + b;
-                    if(!groups[key]) groups[key] = [];
-                    groups[key].push(r);
-                });
 
-                let sortedKeys = Object.keys(groups).sort((k1, k2) => {
-                    let [f1, b1] = k1.split('|||');
-                    let [f2, b2] = k2.split('|||');
-                    return f1.localeCompare(f2) || b1.localeCompare(b2);
-                });
+                if (isGlobal) {
+                    let groups = {};
+                    rawData.forEach(r => {
+                        let f = (r.floor || 'Unknown').trim();
+                        let b = (r.blockNo || 'Unknown').trim();
+                        let key = f + '|||' + b;
+                        if(!groups[key]) groups[key] = [];
+                        groups[key].push(r);
+                    });
 
-                sortedKeys.forEach((key, index) => {
-                    let [grpFloor, grpBlock] = key.split('|||');
-                    let grpData = groups[key];
+                    let sortedKeys = Object.keys(groups).sort((k1, k2) => {
+                        let [f1, b1] = k1.split('|||');
+                        let [f2, b2] = k2.split('|||');
+                        return f1.localeCompare(f2) || b1.localeCompare(b2);
+                    });
 
+                    sortedKeys.forEach((key, index) => {
+                        let [grpFloor, grpBlock] = key.split('|||');
+                        let grpData = groups[key];
+
+                        let empMap = {};
+                        let uniqueStyles = [];
+                        
+                        grpData.forEach(r => {
+                            let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === r.bookName);
+                            let buyer = sObj ? sObj.buyer : 'Unknown';
+                            let eKey = r.workerName + '|' + (r.mobileNo || '');
+                            if(!empMap[eKey]) empMap[eKey] = { name: r.workerName, mobile: r.mobileNo, block: r.blockNo, floor: r.floor, styles: {} };
+                            
+                            let sKey = `${buyer}_${r.styleName}_${r.rate}`; 
+                            if(!empMap[eKey].styles[sKey]) {
+                                empMap[eKey].styles[sKey] = { q: 0, amt: 0 };
+                            }
+                            let rtObj = sObj ? sObj.rates.find(rt => rt.name === r.rate) : null;
+                            let tk = rtObj ? parseFloat(rtObj.tk) || 0 : 0;
+                            
+                            empMap[eKey].styles[sKey].q += (parseInt(r.receiveQty) || 0);
+                            empMap[eKey].styles[sKey].amt += ((parseInt(r.receiveQty) || 0) * tk);
+
+                            if(!uniqueStyles.find(x => x.key === sKey)) {
+                                uniqueStyles.push({ key: sKey, buyer: buyer, name: r.styleName, rate: r.rate });
+                            }
+                        });
+
+                        uniqueStyles.sort((a, b) => a.buyer.localeCompare(b.buyer) || a.name.localeCompare(b.name) || a.rate.localeCompare(b.rate));
+
+                        let buyerList = [];
+                        let currentBuyer = null;
+                        let buyerCount = 0;
+                        uniqueStyles.forEach(s => {
+                            if (s.buyer === currentBuyer) {
+                                buyerCount++;
+                            } else {
+                                if (currentBuyer !== null) buyerList.push({ name: currentBuyer, span: buyerCount });
+                                currentBuyer = s.buyer;
+                                buyerCount = 1;
+                            }
+                        });
+                        if (currentBuyer !== null) buyerList.push({ name: currentBuyer, span: buyerCount });
+
+                        let styleList = [];
+                        let currentStyle = null;
+                        let styleCount = 0;
+                        uniqueStyles.forEach(s => {
+                            let bsKey = s.buyer + '|' + s.name;
+                            if (bsKey === currentStyle) {
+                                styleCount++;
+                            } else {
+                                if (currentStyle !== null) styleList.push({ name: currentStyle.split('|')[1], span: styleCount });
+                                currentStyle = bsKey;
+                                styleCount = 1;
+                            }
+                        });
+                        if (currentStyle !== null) styleList.push({ name: currentStyle.split('|')[1], span: styleCount });
+
+                        let localTheadHtml = `
+                        <tr>
+                            <th rowspan="3">SL</th>
+                            <th rowspan="3">NAME</th>
+                            <th rowspan="3">MOBILE NUMBER</th>
+                            <th rowspan="3">BLOCK</th>
+                            ${buyerList.map(b => `<th colspan="${b.span}">${b.name}</th>`).join('')}
+                            <th rowspan="3">TOTAL</th>
+                            ${isAmt ? `<th rowspan="3">AMOUNT</th>` : ''}
+                            <th rowspan="3">REMARKS</th>
+                        </tr>
+                        <tr>
+                            ${styleList.map(st => `<th colspan="${st.span}">${st.name}</th>`).join('')}
+                        </tr>
+                        <tr>
+                            ${uniqueStyles.map(s => `<th>${s.rate}</th>`).join('')}
+                        </tr>`;
+
+                        let sl = 1, gQ = 0, gA = 0;
+                        let colTotals = {};
+                        uniqueStyles.forEach(s => colTotals[s.key] = { q: 0, amt: 0 });
+
+                        let localTbodyHtml = '';
+                        
+                        let sortedEmployees = Object.values(empMap).sort((a, b) => {
+                            return (a.name || '').localeCompare(b.name || '');
+                        });
+
+                        sortedEmployees.forEach(emp => {
+                            let rQ = 0, rA = 0;
+                            let cells = uniqueStyles.map(s => {
+                                let d = emp.styles[s.key];
+                                if(d) { 
+                                    rQ += d.q; rA += d.amt; 
+                                    colTotals[s.key].q += d.q;
+                                    return `<td>${d.q}</td>`; 
+                                }
+                                return `<td>0</td>`;
+                            }).join('');
+                            localTbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left; padding-left:5px;">${emp.name}</td><td>${emp.mobile || ''}</td><td>${emp.block || ''}</td>${cells}<td style="font-weight:bold;">${rQ}</td>${isAmt ? `<td style="font-weight:bold;">${rA.toFixed(0)}</td>` : ''}<td></td></tr>`;
+                            gQ += rQ; gA += rA;
+                        });
+                        localTbodyHtml += `<tr style="font-weight:bold;"><td colspan="4">TOTAL</td>${uniqueStyles.map(s => `<td>${colTotals[s.key].q}</td>`).join('')}<td>${gQ}</td>${isAmt ? `<td>${gA.toFixed(0)}</td>` : ''}<td></td></tr>`;
+
+                        let pageStyle = index > 0 ? "page-break-before: always; margin-top: 20px;" : "";
+                        
+                        fullContentHtml += `
+                        <div style="${pageStyle}">
+                            <div class="header-section">
+                                <div style="width: 120px;"></div>
+                                <div class="header-center">
+                                    <h2>Matrix Sweaters Limited</h2>
+                                    <h3>${title}</h3>
+                                    <p>Floor: ${grpFloor.toUpperCase()} &nbsp;&nbsp;|&nbsp;&nbsp; Block: ${grpBlock.toUpperCase()} &nbsp;&nbsp;|&nbsp;&nbsp; Section: ${sectionName === 'All' ? 'All Sections' : sectionName}</p>
+                                    <p>Date Range: ${dFromStr} to ${dToStr}</p>
+                                </div>
+                                <div style="width: 120px; display: flex; justify-content: flex-end;">
+                                    ${index === 0 ? printBtnHtml : ''}
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table class="report-table">
+                                    <thead>${localTheadHtml}</thead>
+                                    <tbody>${localTbodyHtml}</tbody>
+                                </table>
+                            </div>
+                        </div>`;
+                    });
+
+                } else {
                     let empMap = {};
                     let uniqueStyles = [];
                     
-                    grpData.forEach(r => {
+                    rawData.forEach(r => {
                         let sObj = window.styles.find(s => s.styleName === r.styleName && s.bookName === r.bookName);
                         let buyer = sObj ? sObj.buyer : 'Unknown';
-                        let eKey = r.workerName;
+                        
+                        let eKey = r.workerName + '|' + (r.mobileNo || '');
                         if(!empMap[eKey]) empMap[eKey] = { name: r.workerName, mobile: r.mobileNo, block: r.blockNo, floor: r.floor, styles: {} };
                         
                         let sKey = `${buyer}_${r.styleName}_${r.rate}`; 
@@ -2364,7 +2883,7 @@
                     });
                     if (currentStyle !== null) styleList.push({ name: currentStyle.split('|')[1], span: styleCount });
 
-                    let localTheadHtml = `
+                    theadHtml = `
                     <tr>
                         <th rowspan="3">SL</th>
                         <th rowspan="3">NAME</th>
@@ -2386,8 +2905,23 @@
                     let colTotals = {};
                     uniqueStyles.forEach(s => colTotals[s.key] = { q: 0, amt: 0 });
 
-                    let localTbodyHtml = '';
-                    Object.values(empMap).forEach(emp => {
+                    tbodyHtml = '';
+                    
+                    let sortedEmployees = Object.values(empMap).sort((a, b) => {
+                        let floorA = (a.floor || '').trim();
+                        let floorB = (b.floor || '').trim();
+                        let resF = floorA.localeCompare(floorB);
+                        if (resF !== 0) return resF;
+
+                        let blockA = (a.block || '').trim();
+                        let blockB = (b.block || '').trim();
+                        let resB = blockA.localeCompare(blockB);
+                        if (resB !== 0) return resB;
+
+                        return (a.name || '').localeCompare(b.name || '');
+                    });
+
+                    sortedEmployees.forEach(emp => {
                         let rQ = 0, rA = 0;
                         let cells = uniqueStyles.map(s => {
                             let d = emp.styles[s.key];
@@ -2398,45 +2932,38 @@
                             }
                             return `<td>0</td>`;
                         }).join('');
-                        localTbodyHtml += `<tr><td>${sl++}</td><td style="text-align:left; padding-left:5px;">${emp.name}</td><td>${emp.mobile}</td><td>${emp.block}</td>${cells}<td style="font-weight:bold;">${rQ}</td>${isAmt ? `<td style="font-weight:bold;">${rA.toFixed(0)}</td>` : ''}<td></td></tr>`;
+                        tbodyHtml += `<tr>
+                            <td>${sl++}</td>
+                            <td style="text-align:left; padding-left:5px;">${emp.name}</td>
+                            <td>${emp.mobile || ''}</td>
+                            <td>${emp.block || ''}</td>
+                            ${cells}
+                            <td style="font-weight:bold;">${rQ}</td>
+                            ${isAmt ? `<td style="font-weight:bold;">${rA.toFixed(0)}</td>` : ''}
+                            <td></td>
+                        </tr>`;
                         gQ += rQ; gA += rA;
                     });
-                    localTbodyHtml += `<tr style="font-weight:bold;"><td colspan="4">TOTAL</td>${uniqueStyles.map(s => `<td>${colTotals[s.key].q}</td>`).join('')}<td>${gQ}</td>${isAmt ? `<td>${gA.toFixed(0)}</td>` : ''}<td></td></tr>`;
-
-                    let pageStyle = index > 0 ? "page-break-before: always; margin-top: 20px;" : "";
                     
-                    fullContentHtml += `
-                    <div style="${pageStyle}">
-                        <div class="header-section">
-                            <div style="width: 120px;"></div>
-                            <div class="header-center">
-                                <h2>Matrix Sweaters Limited</h2>
-                                <h3>${title}</h3>
-                                <p>Floor : ${grpFloor} &nbsp;&nbsp; Block : ${grpBlock} &nbsp;&nbsp; Section: ${sectionName === 'All' ? 'All Sections' : sectionName}</p>
-                                <p>Date Range: ${dFromStr} to ${dToStr}</p>
-                            </div>
-                            <div style="width: 120px; display: flex; justify-content: flex-end;">
-                                ${index === 0 ? printBtnHtml : ''}
-                            </div>
-                        </div>
-                        <div class="table-container">
-                            <table class="report-table">
-                                <thead>${localTheadHtml}</thead>
-                                <tbody>${localTbodyHtml}</tbody>
-                            </table>
-                        </div>
-                    </div>`;
-                });
+                    tbodyHtml += `<tr style="font-weight:bold;">
+                        <td colspan="4" style="text-align:right;">GRAND TOTAL</td>
+                        ${uniqueStyles.map(s => `<td>${colTotals[s.key].q}</td>`).join('')}
+                        <td>${gQ}</td>
+                        ${isAmt ? `<td>${gA.toFixed(0)}</td>` : ''}
+                        <td></td>
+                    </tr>`;
+                }
             }
 
-            if (!fullContentHtml) {
+            // Only append the generic fullContentHtml if type was NOT 3
+            if (!fullContentHtml && type !== '3_Operator_Wise_Production') {
                 fullContentHtml = `
                 <div class="header-section">
                     <div style="width: 120px;"></div>
                     <div class="header-center">
                         <h2>Matrix Sweaters Limited</h2>
                         <h3>${title}</h3>
-                        <p>Floor : ${floorInput || 'All'} &nbsp;&nbsp; Section: ${sectionName === 'All' ? 'All Sections' : sectionName}</p>
+                        <p>Floor : ${floorInput === 'all' || !floorInput ? 'All Floors' : floorInput.toUpperCase()} &nbsp;&nbsp; Section: ${sectionName === 'All' ? 'All Sections' : sectionName}</p>
                         <p>Date Range: ${dFromStr} to ${dToStr}</p>
                     </div>
                     <div style="width: 120px; display: flex; justify-content: flex-end;">
