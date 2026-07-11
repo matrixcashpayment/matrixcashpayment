@@ -751,6 +751,20 @@
                 window.openProductionBook(null, bookName);
                 return;
             }
+            if (window.currentProductionBook) {
+                document.getElementById('home-screen').style.display = 'none';
+                document.getElementById('workspace-area').style.display = 'flex';
+                
+                document.getElementById('infoRowSearch').style.display = 'flex';
+                document.getElementById('infoRowStyles').style.display = 'flex';
+                document.getElementById('quickReportWrapper').style.display = 'flex';
+                document.getElementById('tabsHeaderContainer').style.display = 'flex';
+                
+                let bookDisplayName = window.currentProductionBook.charAt(0).toUpperCase() + window.currentProductionBook.slice(1).toLowerCase() + ' Book';
+                document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [${bookDisplayName}]`;
+                switchTab('Book');
+                return;
+            }
             document.getElementById('workspace-area').style.display = 'none'; 
             document.getElementById('home-screen').style.display = 'flex';
             document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited`; 
@@ -1538,6 +1552,68 @@
             document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [Global Reports]`;
         };
 
+        window.generateGlobalReport = async function(event) {
+            let btn = (event && event.target) ? event.target : null;
+            if(btn) { btn.classList.add('btn-shake'); setTimeout(() => btn.classList.remove('btn-shake'), 100); }
+
+            let type = document.getElementById('gRepSelectInput').value; 
+            let dFromStr = document.getElementById('gRepStartDate').value; 
+            let dToStr = document.getElementById('gRepEndDate').value; 
+            let sectionInput = document.getElementById('gRepSection').value;
+            let floorInput = document.getElementById('gRepFloor').value.trim().toLowerCase(); 
+            let blockInput = document.getElementById('gRepBlock').value.trim().toLowerCase();
+
+            const parseDate = (dStr) => {
+                if(!dStr) return null;
+                const [d, m, y] = dStr.split('/');
+                return new Date(y, m - 1, d);
+            };
+
+            let sDate = parseDate(dFromStr); 
+            let eDate = parseDate(dToStr);
+
+            let allData = [];
+            try {
+                if (sectionInput === 'All') {
+                    allData = await window.dbFetchAllProductionData();
+                } else {
+                    allData = await window.dbFetchBookData(sectionInput);
+                }
+            } catch(err) {
+                alert("Failed to fetch data from Database!"); return;
+            }
+
+            let rawData = allData.filter(r => {
+                if (!r.workerName) return false;
+                
+                if (type === '6_OpWiseIssueDetails') {
+                    if (!r.issueQty || parseInt(r.issueQty) <= 0) return false;
+                    if (r.receiveDate && r.receiveDate.trim() !== '') return false;
+                } else if (type === '3_Operator_Wise_Production') {
+                    if (!r.receiveQty && !r.issueQty) return false;
+                } else {
+                    if (!r.receiveQty || parseInt(r.receiveQty) <= 0) return false;
+                }
+                
+                if (blockInput !== 'all' && blockInput !== '') {
+                    if (!(r.blockNo && r.blockNo.toLowerCase().includes(blockInput))) return false;
+                }
+                if (floorInput !== 'all' && floorInput !== '') {
+                    if (!(r.floor && r.floor.toLowerCase().includes(floorInput))) return false;
+                }
+                let rDate = null;
+                if (type === '6_OpWiseIssueDetails') { rDate = parseDate(r.issueDate); } 
+                else { rDate = parseDate(r.receiveDate || r.issueDate); }
+                
+                if (rDate) { if (sDate && rDate < sDate) return false; if (eDate && rDate > eDate) return false; } else { return false; } 
+                return true;
+            });
+
+            if (rawData.length === 0) { alert("No data found for Global Report!"); return; }
+            
+            window.processAndShowReport(rawData, type, dFromStr, dToStr, floorInput, sectionInput, true, 'global');
+        };
+
         window.generateReport = async function(event) {
             let btn = (event && event.target) ? event.target : null;
             if(btn) { btn.classList.add('btn-shake'); setTimeout(() => btn.classList.remove('btn-shake'), 100); }
@@ -1753,7 +1829,7 @@
 
             let printBtnHtml = (window.currentUser && window.currentUser.role === 'Admin') ? `<button class="btn-print" onclick="window.print()">Print Report</button>` : '';
 
-            if (type === '6_OpWiseIssueDetails' && source === 'local') {
+            if (type === '6_OpWiseIssueDetails' && (source === 'local' || source === 'global')) {
                 title = "Operator Wise Issue Details";
                 theadHtml = `<tr>
                     <th style="width: 40px;">SL No</th>
@@ -1762,7 +1838,7 @@
                     <th>Block</th>
                     <th>Issue Date</th>
                     <th>Style & Tc</th>
-                    <th>Total</th>
+                    <th>Total Qty</th>
                     <th>Remark</th>
                 </tr>`;
                 
@@ -1901,7 +1977,7 @@
                         let ratesWithTk = [...new Set(sRecords.map(r => `${r.rate} (${r.tk}Tk)`))].filter(Boolean).join(', ');
 
                         localHtml += `
-                                <tr style="font-weight: bold;">
+                                <tr style="font-weight: bold; background-color: #FFFFCC;">
                                     <td colspan="8" style="border: 1px solid #000; padding: 4px; text-align: left;">
                                         <span style="margin-right: 50px;">Buyer: ${sBuyer}</span>
                                         <span style="margin-right: 50px;">Style: ${sName}</span>
@@ -1932,7 +2008,7 @@
                         });
 
                         localHtml += `
-                                <tr style="font-weight: bold;">
+                                <tr style="font-weight: bold; background-color: #E2F0D9;">
                                     <td colspan="4" style="border: 1px solid #000; padding: 4px; text-align: right;">Style Total (Target + NonTarget)</td>
                                     <td style="border: 1px solid #000; padding: 4px;">${sIss}</td>
                                     <td style="border: 1px solid #000; padding: 4px;">${sRec}</td>
@@ -1943,7 +2019,7 @@
                     }
 
                     localHtml += `
-                                <tr style="font-weight: bold;">
+                                <tr style="font-weight: bold; background-color: #E2F0D9;">
                                     <td colspan="4" style="border: 1px solid #000; padding: 4px; text-align: right;">ALL STYLE TOTAL (Target + NonTarget)</td>
                                     <td style="border: 1px solid #000; padding: 4px;">${grandIss}</td>
                                     <td style="border: 1px solid #000; padding: 4px;">${grandRec}</td>
@@ -2425,7 +2501,7 @@
                 }
             }
 
-            if (!fullContentHtml && !(type === '3_Operator_Wise_Production') && !(type === '6_OpWiseIssueDetails' && source !== 'local')) {
+            if (!fullContentHtml && type !== '3_Operator_Wise_Production' && !(type === '6_OpWiseIssueDetails' && source === 'quick')) {
                 fullContentHtml = `
                 <div class="header-section">
                     <div style="width: 120px;"></div>
@@ -2508,6 +2584,11 @@
         window.dbFetchBookData = async function(bookName) {
             const q = query(collection(db, "production"), where("bookName", "==", bookName));
             const snap = await getDocs(q);
+            return snap.docs.map(d => d.data());
+        };
+
+        window.dbFetchAllProductionData = async function() {
+            const snap = await getDocs(collection(db, "production"));
             return snap.docs.map(d => d.data());
         };
 
