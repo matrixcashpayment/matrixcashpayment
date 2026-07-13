@@ -244,7 +244,7 @@
                 <span style="display:flex; align-items:center; gap:5px;">🔑 System Login</span>
             </div>
             <div class="login-content">
-                <div style="text-align:center; font-weight:bold; color:#000080; margin-bottom: 5px; font-size: 13px;">Matrix Sweaters Limited</div>
+                <div style="text-align:center; font-weight:bold; color:#000080; margin-bottom: 5px; font-size: 13px;">Daily Cash Payment Production</div>
                 <div class="login-row">
                     <label>Username:</label>
                     <input type="text" id="loginUsername" autocomplete="username" placeholder="Enter username" onkeydown="if(event.key==='Enter') document.getElementById('loginPassword').focus()">
@@ -264,7 +264,7 @@
 
     <!-- Title Bar -->
     <div class="window-title-bar">
-        <div class="title" id="windowTitleText">📊 Cash Payment Production | Matrix Sweaters Limited</div>
+        <div class="title" id="windowTitleText">📊 Cash Payment Production | Daily Cash Payment Production</div>
         <div class="window-controls"></div>
     </div>
 
@@ -343,7 +343,7 @@
         <div id="home-screen" style="display: none; flex-direction: column; justify-content: space-between; align-items: center; flex-grow: 1; background: linear-gradient(135deg, #f6f8fb 0%, #e5ebf4 100%); position: relative;">
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
                 <h1 style="font-size: 85px; font-weight: 900; color: rgba(20, 50, 90, 0.04); margin: 0; letter-spacing: 12px; font-family: 'Arial Black', Impact, sans-serif; text-shadow: 2px 2px 4px rgba(255,255,255,0.9), -1px -1px 2px rgba(0,0,0,0.1); text-align: center; line-height: 1.1; user-select: none;">CASH PAYMENT</h1>
-                <h2 style="font-size: 38px; color: rgba(20, 50, 90, 0.04); margin: 0; font-weight: bold; letter-spacing: 6px; text-shadow: 2px 2px 4px rgba(255,255,255,0.9), -1px -1px 2px rgba(0,0,0,0.1); text-align: center; user-select: none;">Matrix Sweaters Limited</h2>
+                <h2 style="font-size: 38px; color: rgba(20, 50, 90, 0.04); margin: 0; font-weight: bold; letter-spacing: 6px; text-shadow: 2px 2px 4px rgba(255,255,255,0.9), -1px -1px 2px rgba(0,0,0,0.1); text-align: center; user-select: none;">Daily Cash Payment Production</h2>
             </div>
             <div style="padding-bottom: 20px;">
                 <p style="font-size: 12px; color: #666; font-weight: bold; letter-spacing: 1px; margin: 0; text-transform: uppercase;">Software Developed by <span style="color: #1e395b; font-weight: 900;">ARIFUL ISLAM ARIF</span></p>
@@ -761,13 +761,13 @@
                 document.getElementById('tabsHeaderContainer').style.display = 'flex';
                 
                 let bookDisplayName = window.currentProductionBook.charAt(0).toUpperCase() + window.currentProductionBook.slice(1).toLowerCase() + ' Book';
-                document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [${bookDisplayName}]`;
+                document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Daily Cash Payment Production - [${bookDisplayName}]`;
                 switchTab('Book');
                 return;
             }
             document.getElementById('workspace-area').style.display = 'none'; 
             document.getElementById('home-screen').style.display = 'flex';
-            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited`; 
+            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Daily Cash Payment Production`; 
         }
         
         function logout() { location.reload(); }
@@ -1109,7 +1109,7 @@
             setTimeout(() => {
                 if(btn) btn.classList.remove('btn-shake');
                 if(selectedCalDate) {
-                    let dmy = ("0" + selectedCalDate.getDate()).slice(-2) + "/" + ("0" + (selectedCalDate.getMonth() + 1)).slice(-2) + "/" + selectedCalDate.getFullYear();
+                    let dmy = ("0" + selectedCalDate.getDate()).slice(-2) + "/" + ("0" + (selectedCalDate.getMonth() + 1)).slice(-2) + selectedCalDate.getFullYear();
                     if(activeDateInputIdNo === 0) { 
                         if(activeDateInputEl) activeDateInputEl.value = dmy;
                     } 
@@ -1399,7 +1399,7 @@
             passTab.style.display = 'flex';
             passTab.style.borderTop = '1px solid #A0A0A0';
             
-            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [Password Dashboard]`;
+            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Daily Cash Payment Production - [Password Dashboard]`;
         }
 
         window.editUser = function(idx, event) {
@@ -1473,7 +1473,7 @@
             let codeTab = document.getElementById('tab-code-vault');
             codeTab.style.display = 'flex';
             
-            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [Code Vault]`;
+            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Daily Cash Payment Production - [Code Vault]`;
             
             window.renderCodeNotesList();
         };
@@ -1549,7 +1549,7 @@
             gTab.style.display = 'flex';
             gTab.style.borderTop = '1px solid #A0A0A0';
             
-            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [Global Reports]`;
+            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Daily Cash Payment Production - [Global Reports]`;
         };
 
         window.generateGlobalReport = async function(event) {
@@ -1928,7 +1928,7 @@
                     let localHtml = `
                     <div style="${pageStyle} font-family: 'Tahoma', sans-serif;">
                         <div style="text-align: center; margin-bottom: 10px;">
-                            <h2 style="margin: 0; font-size: 20px;">Matrix Sweaters Limited</h2>
+                            <h2 style="margin: 0; font-size: 20px;">Daily Cash Payment Production</h2>
                             <p style="margin: 2px 0; font-size: 11px;">Hajir Pukur, Choydana, Gazipur, Bangladesh</p>
                             <p style="margin: 5px 0; font-size: 13px; font-weight: bold;">${cardTitle}, DateRange: ${dFromStr} to ${dToStr}</p>
                         </div>
@@ -2354,7 +2354,7 @@
                             <div class="header-section">
                                 <div style="width: 120px;"></div>
                                 <div class="header-center">
-                                    <h2>Matrix Sweaters Limited</h2>
+                                    <h2>Daily Cash Payment Production</h2>
                                     <h3>${title}</h3>
                                     <p>Section: ${grpSec.toUpperCase()} &nbsp;&nbsp;|&nbsp;&nbsp; Floor: ${grpFloor.toUpperCase()} &nbsp;&nbsp;|&nbsp;&nbsp; Block: ${grpBlock.toUpperCase()}</p>
                                     <p>Date Range: ${dFromStr} to ${dToStr}</p>
@@ -2506,7 +2506,7 @@
                 <div class="header-section">
                     <div style="width: 120px;"></div>
                     <div class="header-center">
-                        <h2>Matrix Sweaters Limited</h2>
+                        <h2>Daily Cash Payment Production</h2>
                         <h3>${title}</h3>
                         <p>Floor : ${floorInput === 'all' || !floorInput ? 'All Floors' : floorInput.toUpperCase()} &nbsp;&nbsp; Section: ${sectionName === 'All' ? 'All Sections' : sectionName}</p>
                         <p>Date Range: ${dFromStr} to ${dToStr}</p>
@@ -2702,7 +2702,7 @@
                 localStorage.setItem('matrix_last_user', window.currentUser.username);
                 document.getElementById('workspace-area').style.display = 'none';
                 document.getElementById('home-screen').style.display = 'flex';
-                document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited`;
+                document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Daily Cash Payment Production`;
             } else { err.style.display = 'block'; }
         };
 
@@ -2917,7 +2917,7 @@
             document.getElementById('tab-code-vault').style.display = 'none';
 
             window.currentProductionBook = targetSection.toUpperCase();
-            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Matrix Sweaters Limited - [${bookName}]`;
+            document.getElementById('windowTitleText').innerHTML = `📊 Cash Payment Production | Daily Cash Payment Production - [${bookName}]`;
             
             let permittedStyles = getPermittedStyles();
             window.activeStyleName = permittedStyles.length > 0 ? permittedStyles[0].styleName : "";
